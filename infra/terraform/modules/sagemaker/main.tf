@@ -67,19 +67,31 @@ locals {
     )
   }
 
-  # Environment for our own ml/vllm-router image. The router reads MODELS_JSON
-  # (a list of {name, hf_id, path?, gpu_fraction}) and starts one vLLM process
-  # per entry. By default it serves just this model on the whole GPU; set
-  # extra_env.MODELS_JSON to put several models on one GPU.
+  # Environment for our own ml/vllm-router image (see ml/vllm-router/server.py).
+  # The router reads MODELS_JSON, a list of
+  #   {name, path?, gpu_fraction, args?}
+  # and starts one `vllm serve <path> --served-model-name <name>
+  # --gpu-memory-utilization <gpu_fraction> <args...>` per entry. The
+  # gpu_fraction values must add up to LESS than 1.0.
+  # By default it serves just this model; set extra_env.MODELS_JSON to put
+  # several models on one GPU (and add the others to extra_llm_models with the
+  # same endpoint_name).
   router_env = {
     for slug, m in var.models : slug => {
       MODELS_JSON = jsonencode([merge(
-        { name = m.hf_model_id, hf_id = m.hf_model_id, gpu_fraction = 1 },
+        {
+          name         = m.hf_model_id
+          gpu_fraction = m.gpu_memory_utilization
+          args = concat(
+            ["--max-model-len", tostring(m.max_model_len)],
+            m.tensor_parallel_size > 1 ? ["--tensor-parallel-size", tostring(m.tensor_parallel_size)] : [],
+            m.vision ? ["--limit-mm-per-prompt", jsonencode({ image = m.max_images_per_prompt })] : [],
+          )
+        },
+        # S3 weights land directly in /opt/ml/model.
         m.weights_s3_uri != null ? { path = "/opt/ml/model" } : {},
       )])
-      MAX_MODEL_LEN          = tostring(m.max_model_len)
-      GPU_MEMORY_UTILIZATION = tostring(m.gpu_memory_utilization)
-      MODEL_DIR              = "/opt/ml/model"
+      MODEL_DIR = "/opt/ml/model"
     }
   }
 

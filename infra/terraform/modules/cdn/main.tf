@@ -66,15 +66,23 @@ resource "aws_acm_certificate" "this" {
 }
 
 # ACM proves you own the domain by looking for a CNAME record it chose.
+# The certificate covers exactly one name, so there is exactly one record. Its
+# count is fixed in the configuration (not derived from the certificate's
+# validation options, which only exist once the certificate does), so
+# `terraform plan` always knows how many records it will create.
+locals {
+  validation_option = local.custom_domain ? one([
+    for o in aws_acm_certificate.this[0].domain_validation_options : o if o.domain_name == var.domain_name
+  ]) : null
+}
+
 resource "aws_route53_record" "validation" {
-  for_each = local.custom_domain ? {
-    for o in aws_acm_certificate.this[0].domain_validation_options : o.domain_name => o
-  } : {}
+  count = local.custom_domain ? 1 : 0
 
   zone_id         = var.route53_zone_id
-  name            = each.value.resource_record_name
-  type            = each.value.resource_record_type
-  records         = [each.value.resource_record_value]
+  name            = local.validation_option.resource_record_name
+  type            = local.validation_option.resource_record_type
+  records         = [local.validation_option.resource_record_value]
   ttl             = 300
   allow_overwrite = true
 }
@@ -86,7 +94,7 @@ resource "aws_acm_certificate_validation" "this" {
   provider = aws.us_east_1
 
   certificate_arn         = aws_acm_certificate.this[0].arn
-  validation_record_fqdns = [for r in aws_route53_record.validation : r.fqdn]
+  validation_record_fqdns = aws_route53_record.validation[*].fqdn
 }
 
 # ---------------------------------------------------------- distribution ----

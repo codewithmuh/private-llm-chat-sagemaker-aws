@@ -8,7 +8,7 @@
  * over the content and closes after you pick a chat.
  */
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { readLocal, writeLocal } from "@/lib/storage";
 import { Sidebar } from "./Sidebar";
@@ -21,6 +21,11 @@ interface ShellValue {
   isMobile: boolean;
   /** Start a new chat (sidebar button, header button, Ctrl/Cmd+Shift+O). */
   newChat: () => void;
+  /**
+   * Changes on every newChat(). The "/" page uses it as a React key, so
+   * "New chat" gives a fresh screen even when you are already on "/".
+   */
+  newChatKey: number;
 }
 
 const ShellContext = createContext<ShellValue | null>(null);
@@ -36,6 +41,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   // reading localStorage in the initializer can't cause a hydration mismatch.
   const [collapsed, setCollapsed] = useState(() => readLocal(COLLAPSED_KEY) === "1");
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [newChatKey, setNewChatKey] = useState(0);
 
   const toggleSidebar = useCallback(() => {
     if (isMobile) {
@@ -52,6 +58,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   const newChat = useCallback(() => {
     setDrawerOpen(false);
+    setNewChatKey((n) => n + 1);
     router.push("/");
     window.dispatchEvent(new Event(FOCUS_COMPOSER_EVENT));
   }, [router]);
@@ -70,10 +77,20 @@ export function AppShell({ children }: { children: ReactNode }) {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [newChat, drawerOpen]);
 
+  // Close the mobile drawer whenever the page changes (e.g. Settings from the
+  // user menu). Done during render: React's pattern for "reset state when a
+  // value changes", no effect needed.
+  const pathname = usePathname();
+  const [lastPath, setLastPath] = useState(pathname);
+  if (pathname !== lastPath) {
+    setLastPath(pathname);
+    setDrawerOpen(false);
+  }
+
   const sidebarVisible = isMobile ? drawerOpen : !collapsed;
   const value = useMemo(
-    () => ({ sidebarVisible, toggleSidebar, isMobile, newChat }),
-    [sidebarVisible, toggleSidebar, isMobile, newChat],
+    () => ({ sidebarVisible, toggleSidebar, isMobile, newChat, newChatKey }),
+    [sidebarVisible, toggleSidebar, isMobile, newChat, newChatKey],
   );
 
   return (

@@ -28,7 +28,14 @@ export function Sidebar({ hidden, onNavigate }: SidebarProps) {
   return (
     <aside className={styles.sidebar} data-hidden={hidden || undefined} inert={hidden} aria-label="Sidebar">
       <div className={styles.top}>
-        <Link href="/" className={styles.brand} onClick={onNavigate}>
+        <Link
+          href="/"
+          className={styles.brand}
+          onClick={(event) => {
+            event.preventDefault();
+            newChat();
+          }}
+        >
           <LogoMark size={26} />
           <span className={styles.brandName}>{config.app_name}</span>
         </Link>
