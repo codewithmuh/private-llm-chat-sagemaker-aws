@@ -434,7 +434,8 @@
   background: var(--inline-code-bg);
   font-family: var(--font-mono);
   font-size: 0.85em;
-  overflow-wrap: anywhere;
+  /* Break a long path only when it can't fit (tables scroll instead). */
+  overflow-wrap: break-word;
 }
 
 /* tables */

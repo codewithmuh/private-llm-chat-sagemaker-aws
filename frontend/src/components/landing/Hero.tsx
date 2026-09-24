@@ -13,7 +13,9 @@ export function Hero() {
       <div className={`${styles.container} ${styles.heroInner}`}>
         <span className={styles.pill}>
           <span className={styles.pillTag}>Open source</span>
-          MIT licensed · runs in your AWS account
+          <span>
+            MIT licensed<span className={styles.pillMore}> · runs in your AWS account</span>
+          </span>
         </span>
         <h1 className={styles.h1}>
           Your own ChatGPT, on <em>your own GPU</em>, in your own AWS account.

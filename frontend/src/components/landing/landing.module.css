@@ -135,7 +135,14 @@
   box-shadow: var(--shadow-sm);
 }
 
+@media (max-width: 480px) {
+  .pillMore {
+    display: none;
+  }
+}
+
 .pillTag {
+  white-space: nowrap;
   padding: 2px 8px;
   border-radius: var(--radius-full);
   background: var(--accent-soft);

@@ -68,13 +68,13 @@ function DiagramSvg() {
 
       {/* ECS Fargate */}
       <rect x={280} y={160} width={800} height={140} rx={16} className={styles.group} />
-      <text x={298} y={183} className={styles.groupLabel}>
+      <text x={1062} y={183} textAnchor="end" className={styles.groupLabel}>
         ECS Fargate (ARM64)
       </text>
 
       {/* edges (drawn first so boxes sit on top) */}
-      <path d="M210 76 H274" className={styles.edge} markerEnd="url(#arch-arrow)" />
-      <text x={244} y={66} textAnchor="middle" className={styles.edgeLabel}>
+      <path d="M190 76 H274" className={styles.edge} markerEnd="url(#arch-arrow)" />
+      <text x={214} y={66} textAnchor="middle" className={styles.edgeLabel}>
         HTTPS
       </text>
       <path d="M490 76 H569" className={styles.edge} markerEnd="url(#arch-arrow)" />
@@ -104,7 +104,7 @@ function DiagramSvg() {
       </text>
 
       {/* boxes */}
-      <Box x={20} y={40} w={190} h={72} title="Browser" sub="your team" />
+      <Box x={20} y={40} w={170} h={72} title="Browser" sub="your team" />
       <Box x={280} y={40} w={210} h={72} title="CloudFront" sub="HTTPS, one domain" />
       <Box x={575} y={40} w={220} h={72} title="Load balancer" sub="accepts CloudFront only" />
 
