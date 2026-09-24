@@ -385,6 +385,13 @@ variable "models" {
   }
 
   validation {
+    # SageMaker names are limited to 63 characters, and the endpoint
+    # configuration is named "<project>-<environment>-<slug>-<8 hex>".
+    condition     = alltrue([for slug in keys(var.models) : length("${var.project}-${var.environment}-${slug}-12345678") <= 63])
+    error_message = "A model slug is too long: \"<project>-<environment>-<slug>\" must stay under 55 characters (SageMaker's 63-character name limit)."
+  }
+
+  validation {
     condition     = alltrue([for m in values(var.models) : contains(["on_demand", "always_on", "off", "manual"], m.scaling)])
     error_message = "scaling must be one of on_demand, always_on, off, manual."
   }
@@ -454,6 +461,7 @@ variable "hf_token" {
   type        = string
   default     = ""
   sensitive   = true
+  nullable    = false
 }
 
 variable "sagemaker_vpc_isolated" {
@@ -465,6 +473,11 @@ variable "sagemaker_vpc_isolated" {
   EOT
   type        = bool
   default     = false
+
+  validation {
+    condition     = !var.sagemaker_vpc_isolated || alltrue([for m in values(var.models) : m.weights_s3_uri != null])
+    error_message = "sagemaker_vpc_isolated = true needs weights_s3_uri on every model: an isolated endpoint cannot download from Hugging Face. Stage the weights with scripts/stage-weights.sh."
+  }
 }
 
 variable "sagemaker_interface_endpoints" {

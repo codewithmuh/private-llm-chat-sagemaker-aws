@@ -231,7 +231,7 @@ locals {
   # Secrets are injected by ECS from Secrets Manager at container start.
   # Format: "<secret arn>:<json key>::" picks one key of a JSON secret.
   django_secrets = {
-    DJANGO_SECRET_KEY = "${aws_secretsmanager_secret_version.app.arn}:DJANGO_SECRET_KEY::"
+    DJANGO_SECRET_KEY = "${aws_secretsmanager_secret_version.app.secret_arn}:DJANGO_SECRET_KEY::"
     DB_PASSWORD       = "${module.database.password_secret_arn}:password::"
   }
 }

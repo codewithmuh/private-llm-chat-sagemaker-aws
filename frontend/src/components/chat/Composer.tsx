@@ -62,13 +62,14 @@ export function Composer({ ref, conversationId, model, streaming, onSend, onStop
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const addUploads = uploads.addFiles;
   const addFiles = useCallback(
     (files: File[]) => {
       if (files.length === 0) return;
-      const problem = uploads.addFiles(files);
+      const problem = addUploads(files);
       if (problem) toast.error(problem);
     },
-    [uploads, toast],
+    [addUploads, toast],
   );
 
   const focus = useCallback(() => textareaRef.current?.focus(), []);
@@ -108,18 +109,25 @@ export function Composer({ ref, conversationId, model, streaming, onSend, onStop
   }, [focus]);
 
   const content = text.trim();
-  const hasErrors = uploads.items.some((i) => i.status === "error");
   const canSend = !streaming && !sending && !uploads.uploading && (content.length > 0 || uploads.ready.length > 0);
 
   const submit = async () => {
     if (!canSend) return;
-    if (hasErrors && uploads.ready.length === 0 && !content) return;
+    // Clear the box right away (the message shows up in the chat), but keep
+    // the draft: if the server refuses it (e.g. 503 model_starting) nothing
+    // was saved, so the text and files go back into the box.
+    const draftText = text;
+    const draftItems = uploads.detach();
+    const attachments = draftItems.filter((i) => i.status === "ready" && i.attachment).map((i) => i.attachment as Attachment);
+    setText("");
     setSending(true);
-    const ok = await onSend(content, uploads.ready);
+    const ok = await onSend(content, attachments);
     setSending(false);
     if (ok) {
-      setText("");
-      uploads.clear();
+      uploads.release(draftItems);
+    } else {
+      setText((typed) => (typed.trim() ? typed : draftText));
+      uploads.restore(draftItems);
     }
   };
 

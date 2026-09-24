@@ -1,0 +1,183 @@
+/* Shared by every page under app/(auth)/. */
+
+.page {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 32px 16px;
+  background: var(--bg-sidebar);
+}
+
+.card {
+  width: 100%;
+  max-width: 420px;
+  padding: 32px 32px 28px;
+  border-radius: var(--radius-lg);
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-md);
+  animation: pop-in var(--normal) var(--ease);
+}
+
+@media (max-width: 480px) {
+  .card {
+    padding: 24px 20px;
+  }
+}
+
+.brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.brandName {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-2);
+}
+
+.heading {
+  text-align: center;
+  margin-bottom: 22px;
+}
+
+.title {
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.subtitle {
+  margin-top: 6px;
+  color: var(--text-2);
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.form :global(.btn) {
+  height: 44px;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 18px 0;
+  color: var(--text-3);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.divider::before,
+.divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.google {
+  display: flex;
+  justify-content: center;
+  min-height: 44px;
+}
+
+.googleButton {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.links {
+  margin-top: 20px;
+  text-align: center;
+  font-size: 14px;
+  color: var(--text-2);
+}
+
+.smallLink {
+  font-size: 13px;
+  color: var(--accent);
+}
+
+.smallLink:hover {
+  text-decoration: underline;
+}
+
+.center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  text-align: center;
+}
+
+.resend {
+  display: flex;
+  justify-content: center;
+  margin-top: 4px;
+  font-size: 14px;
+  color: var(--text-2);
+}
+
+.textButton {
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.textButton:disabled {
+  color: var(--text-3);
+}
+
+.footer {
+  font-size: 12.5px;
+  color: var(--text-3);
+  text-align: center;
+  max-width: 420px;
+}
+
+.strength {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12.5px;
+  color: var(--text-3);
+}
+
+.bars {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+  flex: 1;
+}
+
+.bar {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--surface-3);
+  transition: background var(--normal);
+}
+
+.strength[data-score="1"] .bar[data-on] {
+  background: var(--danger);
+}
+.strength[data-score="2"] .bar[data-on] {
+  background: var(--warning);
+}
+.strength[data-score="3"] .bar[data-on],
+.strength[data-score="4"] .bar[data-on] {
+  background: var(--success);
+}

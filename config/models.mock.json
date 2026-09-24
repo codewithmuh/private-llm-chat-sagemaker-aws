@@ -1,0 +1,16 @@
+[
+  {
+    "id": "mock",
+    "name": "Mock model",
+    "description": "No GPU needed. Streams a fake answer that shows what the backend sent. Served by ml/mock over the OpenAI API.",
+    "provider": "openai",
+    "base_url": "http://mock-llm:8080/v1",
+    "model_id": "mock-chat",
+    "vision": true,
+    "ocr": true,
+    "context_window": 32768,
+    "max_output_tokens": 2048,
+    "default": true,
+    "sort": 10
+  }
+]

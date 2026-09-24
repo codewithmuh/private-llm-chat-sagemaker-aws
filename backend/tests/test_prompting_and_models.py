@@ -93,3 +93,12 @@ def test_sync_models_create_update_disable():
 def test_parse_models_config_rejects_bad_entries(bad):
     with pytest.raises(ValueError):
         parse_models_config([bad])
+
+
+@pytest.mark.django_db
+def test_sync_models_from_file(tmp_path, settings):
+    path = tmp_path / "models.json"
+    path.write_text(json.dumps(CONFIG[1:]))
+    settings.LLM_MODELS = ""
+    settings.LLM_MODELS_FILE = str(path)
+    assert sync_models()["created"] == ["llama"]

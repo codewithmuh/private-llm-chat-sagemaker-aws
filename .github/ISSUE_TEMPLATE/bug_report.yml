@@ -1,0 +1,33 @@
+name: Bug report
+description: Something doesn't work as documented
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, what happened instead?
+    validations:
+      required: true
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where does it run?
+      options:
+        - Local (docker compose)
+        - Local (without Docker)
+        - AWS (full stack via Terraform)
+        - Only the model on SageMaker (ml/sagemaker/deploy.py)
+    validations:
+      required: true
+  - type: input
+    id: model
+    attributes:
+      label: Model and provider
+      placeholder: e.g. Qwen/Qwen3-VL-8B-Instruct-FP8 on ml.g6e.xlarge / Ollama qwen2.5vl:3b / mock
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: api container logs, browser console, or CloudWatch. Remove anything private first.
+      render: text

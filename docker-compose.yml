@@ -1,0 +1,105 @@
+# The whole app on your laptop: `make up` (or `docker compose up -d --build`).
+#
+#   web       http://localhost:3000   the chat UI (Next.js)
+#   api       http://localhost:8000   Django REST API, admin at /admin/
+#   mailpit   http://localhost:8025   every email the app sends (codes, resets)
+#   postgres                          the database
+#   mock-llm                          a fake model server: no GPU needed
+#
+# Optional:
+#   --profile ollama    real open-source models on your machine (see docs/02-*)
+#   -f docker-compose.aws.yml   use a model deployed on SageMaker (see docs/03-*)
+#
+# Ports can be changed in .env (WEB_PORT, API_PORT, MAILPIT_PORT).
+
+name: llmchat
+
+x-api-env: &api-env
+  DJANGO_SETTINGS_MODULE: config.settings.dev
+  DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-local-dev-only-not-secret}
+  DB_HOST: postgres
+  DB_NAME: llmchat
+  DB_USER: llmchat
+  DB_PASSWORD: llmchat_local
+  PUBLIC_URL: http://localhost:${WEB_PORT:-3000}
+  CORS_ALLOWED_ORIGINS: http://localhost:${WEB_PORT:-3000}
+  CSRF_TRUSTED_ORIGINS: http://localhost:${WEB_PORT:-3000}
+  EMAIL_PROVIDER: smtp
+  EMAIL_HOST: mailpit
+  EMAIL_PORT: "1025"
+  DEFAULT_FROM_EMAIL: Private LLM Chat <no-reply@llmchat.local>
+  EMAIL_VERIFICATION: ${EMAIL_VERIFICATION:-mandatory}
+  GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+  ADMIN_EMAILS: ${ADMIN_EMAILS:-}
+  LLM_MODELS: ${LLM_MODELS:-}
+  LLM_MODELS_FILE: /config/${LLM_MODELS_FILE:-models.mock.json}
+  STORAGE_BACKEND: local
+  MEDIA_ROOT: /app/media
+  AWS_REGION: ${AWS_REGION:-us-east-1}
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: llmchat
+      POSTGRES_USER: llmchat
+      POSTGRES_PASSWORD: llmchat_local
+    volumes: ["pgdata:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U llmchat -d llmchat"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+
+  mailpit:
+    image: axllent/mailpit:latest
+    ports: ["${MAILPIT_PORT:-8025}:8025"]
+
+  mock-llm:
+    build: ./ml/mock
+
+  api:
+    build:
+      context: ./backend
+      target: api
+    environment:
+      <<: *api-env
+      RUN_BOOTSTRAP: "true"   # migrate + load models on start
+    volumes:
+      - ./config:/config:ro
+      - media:/app/media
+    ports: ["${API_PORT:-8000}:8000"]
+    depends_on:
+      postgres: {condition: service_healthy}
+      mock-llm: {condition: service_started}
+
+  web:
+    build:
+      context: ./frontend
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:${API_PORT:-8000}
+    ports: ["${WEB_PORT:-3000}:3000"]
+    depends_on: [api]
+
+  # --- optional: real models on your machine -------------------------------
+  # docker compose --profile ollama up -d   (then LLM_MODELS_FILE=models.ollama.json)
+  # On a Mac, Docker has no GPU: the native Ollama app is much faster. See docs.
+  ollama:
+    image: ollama/ollama:latest
+    profiles: ["ollama"]
+    volumes: ["ollama:/root/.ollama"]
+    ports: ["${OLLAMA_PORT:-11434}:11434"]
+
+  ollama-pull:
+    image: ollama/ollama:latest
+    profiles: ["ollama"]
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+    entrypoint: ["/bin/sh", "-c", "sleep 3 && ollama pull qwen2.5vl:3b && ollama pull llama3.2:3b"]
+    depends_on: [ollama]
+    restart: "no"
+
+volumes:
+  pgdata:
+  media:
+  ollama:

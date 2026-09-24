@@ -1,0 +1,39 @@
+# Use models deployed on AWS SageMaker from the local app.
+#
+#   docker compose -f docker-compose.yml -f docker-compose.aws.yml up -d --build
+#   (or: make up-aws)
+#
+# The api container reads your AWS credentials from ~/.aws (read-only) and
+# calls SageMaker with them. The gpu-controller starts/stops endpoints whose
+# scaling is on_demand/always_on/off; with scaling "manual" it only watches.
+#
+# Needs in .env:  AWS_PROFILE, AWS_REGION, LLM_MODELS_FILE=models.sagemaker.json
+
+x-aws: &aws
+  AWS_PROFILE: ${AWS_PROFILE:-default}
+  AWS_REGION: ${AWS_REGION:-us-east-1}
+  AWS_SDK_LOAD_CONFIG: "1"
+
+services:
+  api:
+    environment:
+      <<: *aws
+    volumes:
+      - ${HOME}/.aws:/home/app/.aws:ro
+
+  gpu-controller:
+    build:
+      context: ./backend
+      target: api
+    command: ["python", "manage.py", "gpu_controller"]
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.dev
+      DB_HOST: postgres
+      DB_NAME: llmchat
+      DB_USER: llmchat
+      DB_PASSWORD: llmchat_local
+      <<: *aws
+    volumes:
+      - ${HOME}/.aws:/home/app/.aws:ro
+    depends_on:
+      api: {condition: service_healthy}

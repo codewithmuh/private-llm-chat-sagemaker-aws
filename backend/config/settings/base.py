@@ -50,8 +50,11 @@ def database_from_env() -> dict:
     if url:
         parsed = urllib.parse.urlparse(url)
         if parsed.scheme == "sqlite":
-            name = parsed.path.lstrip("/") or "db.sqlite3"
-            return {"ENGINE": "django.db.backends.sqlite3", "NAME": BASE_DIR / name}
+            # sqlite:///db.sqlite3 -> backend/db.sqlite3 (relative)
+            # sqlite:////tmp/db.sqlite3 -> /tmp/db.sqlite3 (absolute: four slashes)
+            path = parsed.path
+            name = path[1:] if path.startswith("//") else BASE_DIR / (path.lstrip("/") or "db.sqlite3")
+            return {"ENGINE": "django.db.backends.sqlite3", "NAME": name}
         return {
             "ENGINE": "django.db.backends.postgresql",
             "NAME": parsed.path.lstrip("/"),
@@ -245,7 +248,10 @@ FILE_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024
 
 # JSON list of models; see docs/configuration.md. Synced into the database by
 # `python manage.py sync_models`.
-LLM_MODELS = env("LLM_MODELS", "[]")
+LLM_MODELS = env("LLM_MODELS", "")
+# ...or a path to a JSON file with the same list (used when LLM_MODELS is
+# empty). docker compose mounts ../config/models.*.json here.
+LLM_MODELS_FILE = env("LLM_MODELS_FILE")
 LLM_TIMEOUT_SECONDS = env_int("LLM_TIMEOUT_SECONDS", 300)
 OCR_ENGINE = env("OCR_ENGINE", "auto")
 TITLE_GENERATION = env_bool("TITLE_GENERATION", True)

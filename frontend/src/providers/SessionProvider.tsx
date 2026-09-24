@@ -102,10 +102,12 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     try {
       await api.post("/api/auth/logout/");
     } catch {
-      // Even if the request failed, leave: a full reload clears all state.
+      // Leave anyway; the session cookie is gone or will expire.
     }
-    window.location.assign("/login");
-  }, []);
+    // /login is outside this layout, so every provider here (messages,
+    // streams, the user) unmounts and its state is dropped.
+    router.replace("/login");
+  }, [router]);
 
   const value = useMemo<SessionValue | null>(
     () =>

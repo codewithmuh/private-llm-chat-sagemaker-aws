@@ -75,7 +75,6 @@ export const ConversationItem = memo(function ConversationItem({
           defaultValue={conversation.title}
           aria-label="Chat title"
           maxLength={200}
-          // eslint-disable-next-line jsx-a11y/no-autofocus
           autoFocus
           onFocus={(event) => event.currentTarget.select()}
           onKeyDown={onRenameKey}

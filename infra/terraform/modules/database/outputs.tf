@@ -19,5 +19,5 @@ output "username" {
 # (the ECS task definitions) then waits until the password is actually stored.
 output "password_secret_arn" {
   description = "Secrets Manager secret holding {\"username\", \"password\"}."
-  value       = aws_secretsmanager_secret_version.db.arn
+  value       = aws_secretsmanager_secret_version.db.secret_arn
 }

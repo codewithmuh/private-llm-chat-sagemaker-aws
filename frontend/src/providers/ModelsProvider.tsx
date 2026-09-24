@@ -30,22 +30,25 @@ export function ModelsProvider({ children }: { children: ReactNode }) {
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const refresh = useCallback(async () => {
-    try {
-      const list = await api.get<Model[]>("/api/models/");
-      setModels(list);
-      setError(null);
-      return list;
-    } catch (err) {
-      setError(errorMessage(err, "Couldn't load the model list."));
-      return [];
-    } finally {
-      setLoaded(true);
-    }
-  }, []);
+  const refresh = useCallback(
+    () =>
+      api.get<Model[]>("/api/models/").then(
+        (list) => {
+          setModels(list);
+          setError(null);
+          setLoaded(true);
+          return list;
+        },
+        (err: unknown) => {
+          setError(errorMessage(err, "Couldn't load the model list."));
+          setLoaded(true);
+          return [] as Model[];
+        },
+      ),
+    [],
+  );
 
   useEffect(() => {
-    // Initial load; state is only set after the request resolves.
     void refresh();
   }, [refresh]);
 

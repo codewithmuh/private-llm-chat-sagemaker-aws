@@ -1,0 +1,51 @@
+.thinking {
+  margin-bottom: 12px;
+}
+
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 10px 0 8px;
+  margin-left: -8px;
+  border-radius: var(--radius);
+  font-size: 13.5px;
+  color: var(--text-2);
+}
+
+.toggle:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.thinking[data-in-progress] .toggle span {
+  animation: pulse 1.6s ease-in-out infinite;
+}
+
+.icon {
+  color: var(--text-3);
+}
+
+.chevron {
+  color: var(--text-3);
+  transition: transform var(--fast) var(--ease);
+}
+
+.toggle[aria-expanded="true"] .chevron {
+  transform: rotate(90deg);
+}
+
+.body {
+  margin-top: 6px;
+  padding: 2px 0 2px 14px;
+  border-left: 2px solid var(--border);
+  color: var(--text-2);
+  animation: fade-in var(--normal) var(--ease);
+}
+
+.body > div {
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--text-2);
+}

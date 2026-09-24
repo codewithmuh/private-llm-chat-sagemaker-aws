@@ -138,12 +138,26 @@ export function useUploads(initial: Attachment[] = []) {
     setItems((list) => list.filter((i) => i.key !== key));
   }, []);
 
-  /** After sending: the files now belong to the message, so just forget them. */
-  const clear = useCallback(() => {
-    itemsRef.current.forEach((item) => {
+  /**
+   * Take all chips out of the composer (while a message is being sent) and
+   * return them, so they can be put back if the server refuses the message.
+   */
+  const detach = useCallback((): UploadItem[] => {
+    const current = itemsRef.current;
+    setItems([]);
+    return current;
+  }, []);
+
+  /** Put detached chips back (the message was refused). */
+  const restore = useCallback((restored: UploadItem[]) => {
+    setItems((list) => [...restored, ...list]);
+  }, []);
+
+  /** The message was sent: the files belong to it now; free the previews. */
+  const release = useCallback((released: UploadItem[]) => {
+    released.forEach((item) => {
       if (item.previewUrl?.startsWith("blob:")) URL.revokeObjectURL(item.previewUrl);
     });
-    setItems([]);
   }, []);
 
   /** Run OCR on an uploaded file and return the text. */
@@ -167,5 +181,5 @@ export function useUploads(initial: Attachment[] = []) {
   const uploading = items.some((i) => i.status === "uploading");
   const ready = items.filter((i) => i.status === "ready" && i.attachment).map((i) => i.attachment as Attachment);
 
-  return { items, addFiles, addExisting, remove, clear, runOcr, uploading, ready };
+  return { items, addFiles, addExisting, remove, detach, restore, release, runOcr, uploading, ready };
 }

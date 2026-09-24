@@ -1,0 +1,162 @@
+# Your settings for the stack.
+#
+#   cp terraform.tfvars.example terraform.tfvars      (terraform.tfvars is gitignored)
+#
+# Everything here is OPTIONAL: every variable has a default, and an empty
+# terraform.tfvars deploys a working app with one model (Qwen3-VL 8B) in
+# us-east-1. Uncomment and change what you need. Full descriptions are in
+# variables.tf; the step-by-step guide is docs/deploy-aws.md.
+#
+# Never put AWS access keys here. Terraform uses your AWS CLI profile:
+#   export AWS_PROFILE=my-profile
+
+# =============================================================== basics =====
+
+# project     = "llmchat"      # prefix of every resource name
+# environment = "dev"          # "prod" turns on deletion protection & friends
+
+# Pick a region where your account has SageMaker GPU quota. Check:
+#   Service Quotas -> Amazon SageMaker -> "ml.g6e.xlarge for endpoint usage"
+# New accounts usually have 0 and must request 1 (docs/deploy-aws.md, step 2).
+# aws_region = "us-east-1"
+
+# ============================================================== network =====
+
+# false (default): containers get public IPs, no NAT gateway (saves ~$33/month).
+#                  They still only accept traffic from the load balancer.
+# true:            containers in private subnets behind a NAT gateway.
+# enable_nat_gateway = false
+
+# ======================================================= custom domain ======
+# Without these the app is at https://<random>.cloudfront.net (shown as app_url).
+# With them: a free ACM certificate + DNS records, all created for you.
+# The zone must be a Route 53 hosted zone in this AWS account.
+
+# domain_name     = "chat.example.com"
+# route53_zone_id = "Z0123456789ABCDEFGHIJ"
+
+# ================================================================ users =====
+
+# app_name = "Private LLM Chat"
+
+# Log in with one of these (verified) addresses and you are an admin (/admin/).
+# admin_emails = ["you@example.com"]
+
+# signup_enabled     = true         # false = invite-only (create users in /admin/)
+# email_verification = "mandatory"  # "mandatory" | "optional" | "none"
+
+# "Sign in with Google". Create an OAuth client of type "Web application" in the
+# Google Cloud console; add the app_url output to its Authorized JavaScript
+# origins. (You only know app_url after the first apply: add this afterwards.)
+# google_client_id = "1234567890-abc.apps.googleusercontent.com"
+
+# ================================================================ email =====
+# Without SES the app runs in "console" mode: emails (and their codes!) are
+# only printed to the api's CloudWatch logs. Set ONE of these for real email.
+# New AWS accounts are in the SES sandbox: you can only send TO verified
+# addresses until you request production access (docs/deploy-aws.md).
+
+# ses_from_email = "no-reply@example.com"   # AWS emails this address a link to click
+# ses_domain     = "example.com"            # verify the whole domain (DKIM)
+
+# =============================================================== models =====
+# Each entry becomes a SageMaker model + endpoint configuration. The app's GPU
+# controller starts/stops the actual GPU endpoint according to `scaling`:
+#
+#   on_demand  start when someone chats with it, delete after idle_minutes idle
+#              (cheapest; the first message after a pause waits 5-15 min)
+#   always_on  keep it running (~$1,900/month for one ml.g6e.xlarge!)
+#   off        keep it deleted
+#   manual     never touch it (you run it yourself)
+#
+# The map key (e.g. "qwen3-vl-8b") is the model id in the API and the UI, and
+# part of the endpoint name "<project>-<environment>-<key>".
+#
+# Sizing rule of thumb: weights (GB) + KV cache must fit in GPU memory.
+#   ml.g5.xlarge   1x A10G  24 GB   ~$1.41/h   7-8B models in FP8/AWQ, short context
+#   ml.g6.xlarge   1x L4    24 GB   ~$1.13/h   same, slower than A10G
+#   ml.g6e.xlarge  1x L40S  48 GB   ~$2.61/h   8B FP8 with long context, 14B FP8
+#   ml.g6e.12xlarge 4x L40S 192 GB  ~$13.12/h  70B FP8 (tensor_parallel_size = 4)
+# (us-east-1 on-demand prices; see docs/cost.md)
+
+# models = {
+#   "qwen3-vl-8b" = {
+#     name        = "Qwen3-VL 8B"
+#     description = "Chat, vision and OCR on one GPU"
+#     hf_model_id = "Qwen/Qwen3-VL-8B-Instruct-FP8"   # Hugging Face repo; also the "model" name in requests
+#
+#     instance_type          = "ml.g6e.xlarge"
+#     max_model_len          = 32768   # context window in tokens (prompt + answer)
+#     gpu_memory_utilization = 0.90    # share of GPU memory vLLM may use
+#     tensor_parallel_size   = 1       # number of GPUs to split the model across
+#
+#     vision            = true         # accepts images
+#     ocr               = true         # preferred model for the OCR tool
+#     max_output_tokens = 4096
+#     # temperature     = 0.7          # omit to use the backend default
+#
+#     scaling         = "on_demand"
+#     idle_minutes    = 30
+#     hourly_cost_usd = 2.61           # only displayed in the admin
+#     default         = true           # the model new chats start with
+#
+#     container      = "dlc"           # "dlc" = AWS vLLM container (no build); "router" = ml/vllm-router
+#     weights_s3_uri = null            # "s3://bucket/prefix/" from scripts/stage-weights.sh
+#     extra_env      = {}              # e.g. { SM_VLLM_MAX_NUM_SEQS = "16" } -> vllm serve --max-num-seqs 16
+#   }
+#
+#   # A second, text-only model (a second GPU when both run):
+#   # "qwen3-8b" = {
+#   #   name            = "Qwen3 8B"
+#   #   hf_model_id     = "Qwen/Qwen3-8B-FP8"
+#   #   instance_type   = "ml.g6.xlarge"
+#   #   max_model_len   = 16384
+#   #   hourly_cost_usd = 1.13
+#   #   idle_minutes    = 15
+#   # }
+# }
+
+# Only for GATED Hugging Face models (you had to accept a license on the model
+# page). Visible in the SageMaker console. Better: pass it on the command line
+#   TF_VAR_hf_token=hf_xxx terraform apply
+# hf_token = ""
+
+# Other LLM providers shown next to the SageMaker models, e.g. OpenAI or any
+# OpenAI-compatible server. Stored in plain text in the ECS task definition.
+# extra_llm_models = [
+#   {
+#     id       = "gpt-4o-mini"
+#     name     = "GPT-4o mini (OpenAI)"
+#     provider = "openai"
+#     model_id = "gpt-4o-mini"
+#     base_url = "https://api.openai.com/v1"
+#     api_key  = "sk-..."
+#   },
+# ]
+
+# Advanced: no internet at all for the model containers (weights from S3 only).
+# sagemaker_vpc_isolated = false
+
+# Advanced: our own multi-model vLLM image (models with container = "router").
+# enable_vllm_router_repo = false
+# vllm_router_image_tag   = "latest"
+
+# ================================================================ sizing ====
+
+# api_cpu = 512     # 0.5 vCPU
+# api_memory = 1024
+# api_desired_count = 1
+# web_cpu = 256
+# web_memory = 512
+# db_instance_class = "db.t4g.micro"
+# log_retention_days = 30
+
+# ======================================================= GitHub Actions =====
+# Let .github/workflows/deploy.yml deploy with short-lived credentials (OIDC).
+# After apply, store the github_deploy_role_arn output as the repository secret
+# AWS_DEPLOY_ROLE_ARN (docs/deploy-aws.md, "Deploy from GitHub Actions").
+
+# enable_github_oidc          = true
+# github_repository           = "your-name/private-llm-chat-sagemaker-aws"
+# create_github_oidc_provider = true    # false if your account already has it
+# github_terraform_apply      = false   # true = CI may run terraform apply (admin-like rights)

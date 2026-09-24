@@ -1,0 +1,225 @@
+# Build the api and web images and deploy them to AWS.
+#
+# OFF by default, so forks and fresh clones do not fail on every push. Turn it on:
+#   1. terraform apply with enable_github_oidc = true and github_repository = "<owner>/<repo>"
+#   2. Repository SECRET   AWS_DEPLOY_ROLE_ARN = <terraform output github_deploy_role_arn>
+#      Repository VARIABLE AWS_REGION          = <your aws_region>
+#      Repository VARIABLE DEPLOY_ENABLED      = true      (deploy on every push to main)
+#   Optional, to let CI run `terraform apply` too (otherwise it only pushes images):
+#      Repository VARIABLE TF_STATE_BUCKET = <bucket from scripts/bootstrap-state.sh>
+#      Repository SECRET   TFVARS_B64      = output of: base64 < infra/terraform/terraform.tfvars
+#      and github_terraform_apply = true in your tfvars (gives the role admin-like rights)
+#   Other optional variables: NAME_PREFIX (default llmchat-dev), TF_STATE_KEY.
+# Full walkthrough: docs/deploy-aws.md, "Deploy from GitHub Actions".
+#
+# No AWS account ids or keys live in this file or in GitHub: the job receives
+# short-lived credentials through OIDC.
+
+name: Deploy to AWS
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "backend/**"
+      - "frontend/**"
+      - "infra/terraform/**"
+      - ".github/workflows/deploy.yml"
+  workflow_dispatch:
+
+# id-token: write lets the job request the OIDC token it trades for AWS credentials.
+permissions:
+  contents: read
+  id-token: write
+
+# Never two deployments at once; a newer push waits for the running one.
+concurrency:
+  group: deploy-aws
+  cancel-in-progress: false
+
+env:
+  NAME_PREFIX: ${{ vars.NAME_PREFIX || 'llmchat-dev' }}
+
+jobs:
+  preflight:
+    name: Check configuration
+    # Push to main runs only when DEPLOY_ENABLED is "true"; a manual run always does.
+    if: github.event_name == 'workflow_dispatch' || vars.DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-24.04
+    outputs:
+      image_tag: ${{ steps.meta.outputs.image_tag }}
+      terraform: ${{ steps.meta.outputs.terraform }}
+    steps:
+      - name: Check secrets and variables
+        env:
+          ROLE_ARN: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          REGION: ${{ vars.AWS_REGION }}
+        run: |
+          missing=0
+          if [ -z "$ROLE_ARN" ]; then
+            echo "::error::Repository secret AWS_DEPLOY_ROLE_ARN is not set (terraform output github_deploy_role_arn)."
+            missing=1
+          fi
+          if [ -z "$REGION" ]; then
+            echo "::error::Repository variable AWS_REGION is not set (the aws_region of your stack)."
+            missing=1
+          fi
+          exit $missing
+
+      - name: Image tag and mode
+        id: meta
+        env:
+          TF_STATE_BUCKET: ${{ vars.TF_STATE_BUCKET }}
+        run: |
+          # The commit SHA: every running container maps to exactly one commit.
+          echo "image_tag=${GITHUB_SHA::12}" >> "$GITHUB_OUTPUT"
+          if [ -n "$TF_STATE_BUCKET" ]; then
+            echo "terraform=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "terraform=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  build:
+    name: Build ${{ matrix.component }} (arm64)
+    needs: preflight
+    # Native ARM runners: the ECS tasks run on ARM64 (Graviton), and building
+    # on ARM is several times faster than emulating it with QEMU. Free for
+    # public repositories. (Private repository without ARM runners: use
+    # ubuntu-24.04 and add docker/setup-qemu-action before Buildx.)
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 45
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - component: api
+            context: backend
+            target: api
+            build_args: ""
+          - component: web
+            context: frontend
+            target: ""
+            # Empty = the browser calls /api/ on the same origin (CloudFront routes it).
+            build_args: NEXT_PUBLIC_API_URL=
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          role-session-name: gha-build-${{ matrix.component }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Log in to ECR
+        id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - uses: docker/setup-buildx-action@v4
+
+      - name: Build and push
+        uses: docker/build-push-action@v7
+        with:
+          context: ${{ matrix.context }}
+          target: ${{ matrix.target }}
+          build-args: ${{ matrix.build_args }}
+          platforms: linux/arm64
+          push: true
+          # A plain image (no attestation index), like scripts/deploy.sh pushes.
+          provenance: false
+          sbom: false
+          tags: ${{ steps.ecr.outputs.registry }}/${{ env.NAME_PREFIX }}/${{ matrix.component }}:${{ needs.preflight.outputs.image_tag }}
+          # Reuse unchanged layers (pip/npm installs) between runs.
+          cache-from: type=gha,scope=${{ matrix.component }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.component }}
+
+  terraform:
+    name: Terraform apply
+    needs: [preflight, build]
+    if: needs.preflight.outputs.terraform == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      TF_IN_AUTOMATION: "true"
+      IMAGE_TAG: ${{ needs.preflight.outputs.image_tag }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          role-session-name: gha-terraform
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - uses: hashicorp/setup-terraform@v4
+        with:
+          # >= 1.10 for the S3 backend's use_lockfile.
+          terraform_version: ${{ vars.TERRAFORM_VERSION || '1.16.4' }}
+          terraform_wrapper: false
+
+      - name: Write terraform.tfvars from the TFVARS_B64 secret
+        env:
+          TFVARS_B64: ${{ secrets.TFVARS_B64 }}
+        run: |
+          if [ -z "$TFVARS_B64" ]; then
+            echo "::error::Secret TFVARS_B64 is not set. Create it with: base64 < infra/terraform/terraform.tfvars"
+            exit 1
+          fi
+          printf '%s' "$TFVARS_B64" | base64 --decode > infra/terraform/terraform.tfvars
+
+      - name: terraform init (S3 backend)
+        working-directory: infra/terraform
+        run: |
+          cp backend.tf.example backend.tf
+          terraform init -input=false \
+            -backend-config="bucket=${{ vars.TF_STATE_BUCKET }}" \
+            -backend-config="key=${{ vars.TF_STATE_KEY || 'llmchat/dev/terraform.tfstate' }}" \
+            -backend-config="region=${{ vars.AWS_REGION }}"
+
+      - name: terraform apply
+        working-directory: infra/terraform
+        run: terraform apply -input=false -auto-approve -var "image_tag=$IMAGE_TAG"
+
+      - name: Wait for ECS services
+        working-directory: infra/terraform
+        run: |
+          CLUSTER="$(terraform output -raw ecs_cluster_name)"
+          if ! aws ecs wait services-stable --cluster "$CLUSTER" --services api web gpu-controller; then
+            echo "::error::Services did not become stable. Recent api events and logs:"
+            aws ecs describe-services --cluster "$CLUSTER" --services api \
+              --query 'services[0].events[:5].message' --output text || true
+            aws logs tail "/ecs/$CLUSTER/api" --since 15m || true
+            exit 1
+          fi
+          {
+            echo "### Deployed \`$IMAGE_TAG\`"
+            echo ""
+            echo "App: $(terraform output -raw app_url)"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  images-only:
+    name: Images pushed (no Terraform in CI)
+    needs: [preflight, build]
+    if: needs.preflight.outputs.terraform != 'true'
+    runs-on: ubuntu-24.04
+    steps:
+      - name: How to roll out
+        env:
+          IMAGE_TAG: ${{ needs.preflight.outputs.image_tag }}
+        run: |
+          cat >> "$GITHUB_STEP_SUMMARY" <<EOF
+          ### Images pushed: \`$IMAGE_TAG\`
+
+          The containers are **not** updated yet: this repository has no \`TF_STATE_BUCKET\`
+          variable, so CI does not run Terraform (the task definitions live in Terraform).
+          Roll out from your machine:
+
+          \`\`\`bash
+          git pull
+          IMAGE_TAG=$IMAGE_TAG ./scripts/deploy.sh --skip-build
+          \`\`\`
+
+          To let CI deploy by itself, see docs/deploy-aws.md, "Deploy from GitHub Actions".
+          EOF
+          echo "Images pushed with tag $IMAGE_TAG. Roll out: IMAGE_TAG=$IMAGE_TAG ./scripts/deploy.sh --skip-build"

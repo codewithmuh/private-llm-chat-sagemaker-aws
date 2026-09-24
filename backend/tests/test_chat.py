@@ -168,3 +168,38 @@ def test_model_switch_is_remembered(auth_client: Client, mock_model):
     parse_sse(auth_client.post_json(f"/api/conversations/{cid}/messages/", {"content": "hi", "model": "other"}))
     assert Conversation.objects.get(pk=cid).model == "other"
     assert Message.objects.get(conversation_id=cid, role="assistant").model == "other"
+
+
+def test_stop_is_honoured_before_the_first_token(user, mock_model, monkeypatch):
+    """Stop pressed while the model is still reading the prompt (no tokens yet)."""
+    import time as _time
+
+    from apps.chat import streaming
+    from apps.llm.providers.base import Provider
+
+    class SlowStart(Provider):
+        def stream(self, request):
+            _time.sleep(0.5)  # "prefill" of a long document
+            yield "late token"
+
+    monkeypatch.setattr(streaming, "PING_EVERY_SECONDS", 0.05)
+    monkeypatch.setattr(streaming, "provider_for", lambda model: SlowStart())
+    conversation = Conversation.objects.create(user=user, model=mock_model.slug)
+    question = Message.objects.create(conversation=conversation, role="user", content="hi")
+    answer = Message.objects.create(
+        conversation=conversation, role="assistant", status="streaming", stop_requested=True
+    )
+
+    chunks = list(
+        streaming.stream_answer(
+            conversation=conversation,
+            model=mock_model,
+            user=user,
+            user_message=question,
+            assistant=answer,
+            first_exchange=False,
+        )
+    )
+    answer.refresh_from_db()
+    assert answer.status == "stopped"
+    assert b"late token" not in b"".join(chunks)

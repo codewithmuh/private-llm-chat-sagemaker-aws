@@ -1,0 +1,29 @@
+[
+  {
+    "id": "qwen3-vl-8b",
+    "name": "Qwen3-VL 8B (SageMaker)",
+    "description": "Chat, vision and OCR on your own SageMaker GPU.",
+    "provider": "sagemaker",
+    "model_id": "Qwen/Qwen3-VL-8B-Instruct-FP8",
+    "endpoint_name": "llmchat-qwen3-vl-8b",
+    "region": "us-east-1",
+    "scaling": "manual",
+    "vision": true,
+    "ocr": true,
+    "context_window": 32768,
+    "max_output_tokens": 4096,
+    "default": true,
+    "sort": 10
+  },
+  {
+    "id": "mock",
+    "name": "Mock model",
+    "description": "Fake answers, for testing the app itself.",
+    "provider": "openai",
+    "base_url": "http://mock-llm:8080/v1",
+    "model_id": "mock-chat",
+    "vision": true,
+    "context_window": 32768,
+    "sort": 90
+  }
+]

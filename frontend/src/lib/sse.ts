@@ -15,7 +15,8 @@
  *
  * If the request fails validation before streaming starts, the server
  * answers with a normal JSON error instead (e.g. 503 model_starting). That
- * becomes a thrown ApiError, exactly like any other API call.
+ * becomes a thrown ApiError, exactly like any other API call, and `onOpen`
+ * is never called.
  *
  * Cancelling: pass an AbortSignal. Aborting closes the connection and makes
  * this function throw an AbortError (check with `isAbortError`).
@@ -54,8 +55,11 @@ export async function postEventStream(
   body: unknown,
   onEvent: (event: SseEvent) => void,
   signal?: AbortSignal,
+  /** Called once the server accepted the request and the stream is open. */
+  onOpen?: () => void,
 ): Promise<void> {
   const res = await rawRequest("POST", path, body, { signal, accept: "text/event-stream" });
+  onOpen?.();
   if (!res.body) return;
 
   const reader = res.body.pipeThrough(new TextDecoderStream()).getReader();

@@ -1,0 +1,107 @@
+# Build our own multi-model vLLM image (ml/vllm-router) and push it to ECR.
+#
+# ADVANCED and manual only. The default models use AWS's vLLM Deep Learning
+# Container, which needs no build at all. You need this image only for models
+# with container = "router" (for example several models sharing one GPU).
+#
+# Before the first run:
+#   - terraform apply with enable_vllm_router_repo = true (creates the ECR repo)
+#   - the AWS_DEPLOY_ROLE_ARN secret and AWS_REGION variable (see deploy.yml)
+# After it: set vllm_router_image_tag = "<tag>" in terraform.tfvars and apply.
+
+name: Build vLLM router image
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Image tag (empty = first 12 characters of the commit SHA)"
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  NAME_PREFIX: ${{ vars.NAME_PREFIX || 'llmchat-dev' }}
+
+jobs:
+  build:
+    name: Build and push vllm-router (amd64)
+    # x86: SageMaker GPU instances (ml.g5/g6/g6e/p4d...) are x86_64, and the
+    # vLLM CUDA base image is published for amd64.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Check the build context exists
+        run: |
+          if [ ! -f ml/vllm-router/Dockerfile ]; then
+            echo "::error::ml/vllm-router/Dockerfile not found."
+            exit 1
+          fi
+
+      # A hosted runner has ~14 GB free. The vLLM base image is ~10 GB and
+      # unpacks to much more, so the build dies with "No space left on device"
+      # unless the preinstalled toolchains are removed first. This frees roughly
+      # 25 GB and takes about a minute.
+      - name: Reclaim disk space
+        run: |
+          echo "before:"; df -h / | tail -1
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc \
+                      /usr/local/share/boost /usr/local/share/powershell \
+                      /usr/share/swift /opt/hostedtoolcache/CodeQL || true
+          sudo docker image prune -af || true
+          sudo apt-get clean || true
+          echo "after:"; df -h / | tail -1
+
+      - name: AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          role-session-name: gha-build-vllm-router
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Log in to ECR
+        id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Image tag
+        id: meta
+        env:
+          INPUT_TAG: ${{ inputs.tag }}
+        run: echo "tag=${INPUT_TAG:-${GITHUB_SHA::12}}" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-buildx-action@v4
+
+      # No GitHub Actions layer cache on purpose: caching a 10 GB image writes
+      # it to disk a second time, which is what fills the runner in the first place.
+      - name: Build and push
+        uses: docker/build-push-action@v7
+        with:
+          context: ml/vllm-router
+          platforms: linux/amd64
+          # SageMaker rejects OCI image manifests:
+          #   "Unsupported manifest media type application/vnd.oci.image.manifest.v1+json"
+          # Buildx produces OCI by default, and provenance/SBOM attestations
+          # add an OCI index, so force the classic Docker v2 format.
+          provenance: false
+          sbom: false
+          outputs: type=image,oci-mediatypes=false,push=true
+          tags: ${{ steps.ecr.outputs.registry }}/${{ env.NAME_PREFIX }}/vllm-router:${{ steps.meta.outputs.tag }}
+
+      - name: Summary
+        if: success()
+        env:
+          TAG: ${{ steps.meta.outputs.tag }}
+        run: |
+          df -h / | tail -1
+          cat >> "$GITHUB_STEP_SUMMARY" <<EOF
+          ### vllm-router pushed: \`$TAG\`
+
+          In infra/terraform/terraform.tfvars set \`vllm_router_image_tag = "$TAG"\`,
+          then \`terraform apply\`. Running endpoints keep the old image until the
+          GPU controller (or \`./scripts/gpu.sh stop\` + \`start\`) re-creates them.
+          EOF

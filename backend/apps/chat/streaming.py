@@ -143,10 +143,19 @@ def stream_answer(
         )
         producer.start()
         last_save = time.monotonic()
+
+        def stop_requested() -> bool:
+            return Message.objects.filter(pk=assistant.pk, stop_requested=True).exists()
+
         while True:
             try:
                 piece = producer.queue.get(timeout=PING_EVERY_SECONDS)
             except queue.Empty:
+                # Still waiting for the model (e.g. reading a long document).
+                # Honour Stop here too, not only between tokens.
+                if stop_requested():
+                    status = Message.Status.STOPPED
+                    break
                 yield PING
                 continue
             if piece is _END:
@@ -162,7 +171,7 @@ def stream_answer(
             if time.monotonic() - last_save > SAVE_EVERY_SECONDS:
                 last_save = time.monotonic()
                 save(final=False)
-                if Message.objects.filter(pk=assistant.pk, stop_requested=True).exists():
+                if stop_requested():
                     status = Message.Status.STOPPED
                     break
         if status == Message.Status.STREAMING:

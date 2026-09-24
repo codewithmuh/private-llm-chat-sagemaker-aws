@@ -30,7 +30,8 @@ GOOGLE_CLIENT_ID = "test-client-id.apps.googleusercontent.com"
 EMAIL_VERIFICATION = "mandatory"
 OCR_ENGINE = "llm"
 TITLE_GENERATION = True
-LLM_MODELS = "[]"
+LLM_MODELS = ""
+LLM_MODELS_FILE = ""
 MOCK_LLM_DELAY = 0.0
 
 # Throttling is tested explicitly where it matters; elsewhere it would make

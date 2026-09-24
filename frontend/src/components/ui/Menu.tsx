@@ -119,7 +119,6 @@ export function Menu({
     left = Math.max(EDGE, Math.min(left, window.innerWidth - width - EDGE));
     top = Math.max(EDGE, Math.min(top, window.innerHeight - height - EDGE));
     // Measuring the DOM before paint is exactly what layout effects are for.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setPosition({ top, left });
 
     // Focus the checked item (radio menus) or the first item.

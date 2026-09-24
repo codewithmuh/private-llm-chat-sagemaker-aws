@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import logging
 from datetime import timedelta
+from pathlib import Path
 
 from django.conf import settings
 from django.db import transaction
@@ -124,6 +125,18 @@ _FIELDS = {
 }
 
 
+def configured_models() -> str:
+    """LLM_MODELS if set, else the contents of LLM_MODELS_FILE, else []."""
+    if settings.LLM_MODELS.strip():
+        return settings.LLM_MODELS
+    if settings.LLM_MODELS_FILE:
+        path = Path(settings.LLM_MODELS_FILE)
+        if not path.is_file():
+            raise ValueError(f"LLM_MODELS_FILE={path} does not exist")
+        return path.read_text()
+    return "[]"
+
+
 def parse_models_config(raw: str | list) -> list[dict]:
     entries = json.loads(raw) if isinstance(raw, str) else raw
     if not isinstance(entries, list):
@@ -158,7 +171,7 @@ def sync_models(raw: str | list | None = None) -> dict[str, list[str]]:
     disappeared from the list are disabled (not deleted: old conversations
     still name them). Models created in /admin/ are left alone.
     """
-    entries = parse_models_config(settings.LLM_MODELS if raw is None else raw)
+    entries = parse_models_config(configured_models() if raw is None else raw)
     result = {"created": [], "updated": [], "disabled": []}
     for entry in entries:
         defaults = {"managed_by_env": True}

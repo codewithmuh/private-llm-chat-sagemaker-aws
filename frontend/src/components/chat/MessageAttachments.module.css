@@ -1,0 +1,114 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  max-width: 100%;
+}
+
+.images {
+  display: grid;
+  gap: 6px;
+  grid-template-columns: repeat(var(--cols, 1), minmax(0, 1fr));
+  max-width: min(100%, 420px);
+}
+
+.images[data-count="1"] {
+  --cols: 1;
+}
+.images[data-count="2"] {
+  --cols: 2;
+}
+.images[data-count="3"] {
+  --cols: 3;
+}
+
+.thumb {
+  display: block;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  cursor: zoom-in;
+}
+
+.images[data-count="1"] .thumb img {
+  max-height: 320px;
+  width: auto;
+  max-width: 100%;
+  object-fit: contain;
+}
+
+.images:not([data-count="1"]) .thumb {
+  aspect-ratio: 1;
+}
+
+.images:not([data-count="1"]) .thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.file {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: min(100%, 320px);
+  padding: 9px 14px 9px 10px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  transition: background var(--fast);
+}
+
+.file:hover {
+  background: var(--surface-2);
+}
+
+.fileIcon {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: var(--radius-sm);
+  background: var(--accent);
+  color: var(--accent-text);
+}
+
+.fileText {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.35;
+}
+
+.fileName {
+  font-size: 13.5px;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fileMeta {
+  font-size: 12px;
+  color: var(--text-3);
+}
+
+.lightbox {
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+}
+
+.lightbox img {
+  max-height: calc(100dvh - 180px);
+  width: auto;
+  border-radius: var(--radius);
+}
+
+.lightbox figcaption {
+  font-size: 13px;
+  padding-bottom: 8px;
+}

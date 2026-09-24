@@ -205,7 +205,7 @@ def deploy(args) -> None:
 
     if not args.no_wait:
         wait_in_service(sm, endpoint)
-    print_app_config(endpoint, p, region)
+    print_app_config(endpoint, config_name, p, region)
 
 
 def wait_in_service(sm, endpoint: str) -> None:
@@ -229,7 +229,7 @@ def wait_in_service(sm, endpoint: str) -> None:
         time.sleep(30)
 
 
-def print_app_config(endpoint: str, p: dict, region: str) -> None:
+def print_app_config(endpoint: str, config_name: str, p: dict, region: str) -> None:
     entry = {
         "id": endpoint.removeprefix("llmchat-"),
         "name": p["name"],
@@ -237,6 +237,9 @@ def print_app_config(endpoint: str, p: dict, region: str) -> None:
         "provider": "sagemaker",
         "model_id": p["hf_model_id"],
         "endpoint_name": endpoint,
+        # Lets the app's GPU controller re-create the endpoint if you switch
+        # "scaling" to "on_demand" (start when used, delete when idle).
+        "endpoint_config_name": config_name,
         "region": region,
         "scaling": "manual",
         "vision": p["vision"],

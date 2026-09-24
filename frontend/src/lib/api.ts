@@ -31,13 +31,22 @@ export class ApiError extends Error {
   readonly status: number;
   readonly code: string;
   readonly fields: Record<string, string>;
+  /** Seconds to wait before retrying (503 model_starting sends `retry_after`). */
+  readonly retryAfter: number | null;
 
-  constructor(status: number, code: string, message: string, fields: Record<string, string> = {}) {
+  constructor(
+    status: number,
+    code: string,
+    message: string,
+    fields: Record<string, string> = {},
+    retryAfter: number | null = null,
+  ) {
     super(message);
     this.name = "ApiError";
     this.status = status;
     this.code = code;
     this.fields = fields;
+    this.retryAfter = retryAfter;
   }
 }
 
@@ -133,7 +142,9 @@ export async function toApiError(res: Response): Promise<ApiError> {
         ? obj.detail
         : defaultMessage(res.status);
   const code = typeof obj.code === "string" ? obj.code : `http_${res.status}`;
-  return new ApiError(res.status, code, message, normaliseFields(obj.fields));
+  const header = Number(res.headers.get("Retry-After"));
+  const retryAfter = typeof obj.retry_after === "number" ? obj.retry_after : Number.isFinite(header) && header > 0 ? header : null;
+  return new ApiError(res.status, code, message, normaliseFields(obj.fields), retryAfter);
 }
 
 function defaultMessage(status: number): string {

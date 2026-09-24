@@ -41,17 +41,21 @@ export function ConversationsProvider({ children }: { children: ReactNode }) {
     latest.current = conversations;
   }, [conversations]);
 
-  const refresh = useCallback(async () => {
-    try {
-      const res = await api.get<{ results: Conversation[] }>("/api/conversations/");
-      setConversations(res.results);
-      setError(null);
-    } catch (err) {
-      setError(errorMessage(err, "Couldn't load your chats."));
-    } finally {
-      setLoaded(true);
-    }
-  }, []);
+  const refresh = useCallback(
+    () =>
+      api.get<{ results: Conversation[] }>("/api/conversations/").then(
+        (res) => {
+          setConversations(res.results);
+          setError(null);
+          setLoaded(true);
+        },
+        (err: unknown) => {
+          setError(errorMessage(err, "Couldn't load your chats."));
+          setLoaded(true);
+        },
+      ),
+    [],
+  );
 
   useEffect(() => {
     void refresh();
