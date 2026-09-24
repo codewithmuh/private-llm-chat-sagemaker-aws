@@ -46,7 +46,8 @@ nobody can take over your account by creating a Google account with your address
    defaults (`email`, `profile`, `openid`) are enough.
 3. **Create credentials → OAuth client ID → Web application**.
 4. **Authorized JavaScript origins**: add every URL people open the app on:
-   - `http://localhost:3000` for local development
+   - `http://localhost:3000` **and** `http://localhost` for local development (Google
+     asks for both when testing on localhost)
    - your CloudFront URL, e.g. `https://d1234abcd.cloudfront.net`, or your domain
 5. No redirect URIs are needed.
 6. Copy the **Client ID** (`….apps.googleusercontent.com`) into `GOOGLE_CLIENT_ID`: in

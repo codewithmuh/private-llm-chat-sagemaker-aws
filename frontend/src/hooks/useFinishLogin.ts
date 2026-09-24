@@ -3,6 +3,7 @@
 import { useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { API_BASE } from "@/lib/api";
+import { markSignedIn } from "@/lib/session-hint";
 
 /** Django admin pages live on the API server, not in this Next.js app. */
 export function isAdminPath(path: string): boolean {
@@ -20,6 +21,7 @@ export function isAdminPath(path: string): boolean {
 export function useFinishLogin(next: string): () => void {
   const router = useRouter();
   return useCallback(() => {
+    markSignedIn();
     if (isAdminPath(next)) {
       // Not a Next.js page (it's Django), so a full navigation is intended here.
       // eslint-disable-next-line @next/next/no-location-assign-relative-destination

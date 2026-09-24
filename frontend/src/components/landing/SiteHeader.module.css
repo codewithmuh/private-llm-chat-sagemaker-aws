@@ -1,0 +1,146 @@
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  height: var(--site-header-height);
+  background: color-mix(in srgb, var(--bg) 85%, transparent);
+  backdrop-filter: saturate(180%) blur(12px);
+  -webkit-backdrop-filter: saturate(180%) blur(12px);
+  border-bottom: 1px solid var(--border);
+}
+
+.inner {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  height: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+@media (max-width: 560px) {
+  .inner {
+    gap: 8px;
+    padding: 0 12px 0 16px;
+  }
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  font-size: 15.5px;
+  font-weight: 650;
+  letter-spacing: -0.015em;
+  white-space: nowrap;
+}
+
+@media (max-width: 400px) {
+  .brand {
+    font-size: 14.5px;
+  }
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.navLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  height: 34px;
+  padding: 0 11px;
+  border-radius: var(--radius-full);
+  font-size: 14px;
+  color: var(--text-2);
+  white-space: nowrap;
+  transition:
+    color var(--fast) var(--ease),
+    background var(--fast) var(--ease);
+}
+
+.navLink:hover {
+  color: var(--text);
+  background: var(--surface-2);
+}
+
+.navLink[aria-current="page"] {
+  color: var(--text);
+  font-weight: 500;
+  background: var(--surface-2);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.menuButton {
+  display: none;
+}
+
+/* Tablet and phone: section links move into the menu. */
+@media (max-width: 999px) {
+  .nav {
+    display: none;
+  }
+  .menuButton {
+    display: inline-grid;
+  }
+}
+
+/* Phone: "Get started" moves into the menu too; "Log in" stays. */
+@media (max-width: 560px) {
+  .getStarted {
+    display: none;
+  }
+}
+
+.mobileMenu {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 16px 18px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  box-shadow: var(--shadow-md);
+  animation: var(--anim-fade-in-fast);
+}
+
+.mobileMenu .navLink {
+  height: 44px;
+  padding: 0 12px;
+  border-radius: var(--radius);
+  font-size: 15px;
+}
+
+.mobileMenu :global(.btn) {
+  margin-top: 10px;
+  height: 44px;
+}
+
+.menuGithub {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 8px;
+  font-size: 14px;
+  color: var(--text-2);
+}
+
+@media (min-width: 1000px) {
+  .mobileMenu {
+    display: none;
+  }
+}

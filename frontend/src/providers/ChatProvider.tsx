@@ -6,8 +6,8 @@
  *
  * WHY A STORE ABOVE THE PAGES
  * This provider sits in app/(app)/layout.tsx, which stays mounted while the
- * user moves between "/" and "/c/[id]". That is what makes the new-chat flow
- * work: on the first message from "/" we create the conversation, start the
+ * user moves between "/chat" and "/c/[id]". That is what makes the new-chat flow
+ * work: on the first message from "/chat" we create the conversation, start the
  * stream here, and only then change the URL to /c/<id>. The page swaps, but
  * the stream keeps writing into this store, so nothing is lost or refetched.
  *

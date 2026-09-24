@@ -13,7 +13,7 @@ import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { useFinishLogin } from "@/hooks/useFinishLogin";
 import { useRedirectIfSignedIn } from "@/hooks/useRedirectIfSignedIn";
 import { api } from "@/lib/api";
-import { safeNext } from "@/lib/browser";
+import { APP_HOME, safeNext } from "@/lib/browser";
 import { NO_ERRORS, toFormErrors, type FormErrors } from "@/lib/forms";
 import type { LoginResponse, MfaMethod, SignupResponse } from "@/lib/types";
 import { useConfig } from "@/providers/ConfigProvider";
@@ -51,7 +51,7 @@ function SignupForm() {
       });
       if (res.status === "verification_required") {
         const query = new URLSearchParams({ email: res.email || email.trim() });
-        if (next !== "/") query.set("next", next);
+        if (next !== APP_HOME) query.set("next", next);
         router.push(`/verify-email?${query}`);
       } else {
         finishLogin();
@@ -163,7 +163,7 @@ function SignupForm() {
 
       <p className={styles.links}>
         Already have an account?{" "}
-        <Link href={next === "/" ? "/login" : `/login?next=${encodeURIComponent(next)}`} className="link">
+        <Link href={next === APP_HOME ? "/login" : `/login?next=${encodeURIComponent(next)}`} className="link">
           Sign in
         </Link>
       </p>

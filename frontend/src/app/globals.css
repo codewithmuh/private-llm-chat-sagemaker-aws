@@ -79,6 +79,7 @@
   --sidebar-width: 260px;
   --reading-width: 768px;
   --header-height: 56px;
+  --site-header-height: 64px; /* the public pages' header (landing, docs) */
 
   /* motion. CSS Modules would rename a keyframes name used inside a module
      (e.g. "pop-in" -> "Menu-module__pop-in"), so modules use these tokens:

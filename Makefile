@@ -61,7 +61,11 @@ backend-install: backend/.venv ## Create backend/.venv with dev dependencies
 
 .PHONY: backend-dev
 backend-dev: backend/.venv ## Run Django on :8000 with SQLite and the in-process mock model (no Docker)
-	cd backend && export DATABASE_URL=sqlite:///db.sqlite3 EMAIL_VERIFICATION=none \
+	@# .env (if present) supplies GOOGLE_CLIENT_ID, ADMIN_EMAILS, ...; the
+	@# lines after it pin what this no-Docker mode needs.
+	set -a; [ -f .env ] && . ./.env; set +a; \
+	cd backend && export DATABASE_URL=sqlite:///db.sqlite3 EMAIL_VERIFICATION=none EMAIL_PROVIDER=console \
+	  LLM_MODELS_FILE= \
 	  LLM_MODELS='[{"id":"mock","name":"Mock (in-process)","provider":"mock","vision":true,"ocr":true,"default":true}]' && \
 	  .venv/bin/python manage.py bootstrap && .venv/bin/python manage.py runserver 0.0.0.0:8000
 

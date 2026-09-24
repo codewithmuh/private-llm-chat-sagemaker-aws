@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Ellipsis, Pencil, Pin, PinOff, Trash2 } from "lucide-react";
 import { useConfirm } from "@/components/ui/Confirm";
 import { Menu, MenuItem, MenuSeparator } from "@/components/ui/Menu";
+import { APP_HOME } from "@/lib/browser";
 import type { Conversation } from "@/lib/types";
 import { useChatActions } from "@/providers/ChatProvider";
 import { useConversations } from "@/providers/ConversationsProvider";
@@ -63,7 +64,7 @@ export const ConversationItem = memo(function ConversationItem({
     if (!ok) return;
     if (await remove(conversation.id)) {
       forget(conversation.id);
-      if (active) router.push("/");
+      if (active) router.push(APP_HOME);
     }
   };
 

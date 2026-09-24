@@ -10,6 +10,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
+import { APP_HOME } from "@/lib/browser";
 import { readLocal, writeLocal } from "@/lib/storage";
 import { Sidebar } from "./Sidebar";
 import styles from "./AppShell.module.css";
@@ -22,8 +23,8 @@ interface ShellValue {
   /** Start a new chat (sidebar button, header button, Ctrl/Cmd+Shift+O). */
   newChat: () => void;
   /**
-   * Changes on every newChat(). The "/" page uses it as a React key, so
-   * "New chat" gives a fresh screen even when you are already on "/".
+   * Changes on every newChat(). The "/chat" page uses it as a React key, so
+   * "New chat" gives a fresh screen even when you are already on "/chat".
    */
   newChatKey: number;
 }
@@ -59,7 +60,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const newChat = useCallback(() => {
     setDrawerOpen(false);
     setNewChatKey((n) => n + 1);
-    router.push("/");
+    router.push(APP_HOME);
     window.dispatchEvent(new Event(FOCUS_COMPOSER_EVENT));
   }, [router]);
 

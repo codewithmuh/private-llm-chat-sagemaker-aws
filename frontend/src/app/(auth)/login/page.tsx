@@ -12,7 +12,7 @@ import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { useFinishLogin } from "@/hooks/useFinishLogin";
 import { useRedirectIfSignedIn } from "@/hooks/useRedirectIfSignedIn";
 import { api, isApiError } from "@/lib/api";
-import { safeNext } from "@/lib/browser";
+import { APP_HOME, safeNext } from "@/lib/browser";
 import { NO_ERRORS, toFormErrors, type FormErrors } from "@/lib/forms";
 import type { LoginResponse, MfaMethod } from "@/lib/types";
 import { useConfig } from "@/providers/ConfigProvider";
@@ -47,7 +47,7 @@ function LoginForm() {
       // Verification is mandatory and pending: the server just emailed a new code.
       if (isApiError(error) && error.code === "email_not_verified") {
         const query = new URLSearchParams({ email: emailForVerification });
-        if (next !== "/") query.set("next", next);
+        if (next !== APP_HOME) query.set("next", next);
         router.push(`/verify-email?${query}`);
         return;
       }
@@ -147,7 +147,7 @@ function LoginForm() {
       {config.signup_enabled && (
         <p className={styles.links}>
           Don&apos;t have an account?{" "}
-          <Link href={next === "/" ? "/signup" : `/signup?next=${encodeURIComponent(next)}`} className="link">
+          <Link href={next === APP_HOME ? "/signup" : `/signup?next=${encodeURIComponent(next)}`} className="link">
             Sign up
           </Link>
         </p>

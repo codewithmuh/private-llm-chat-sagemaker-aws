@@ -1,0 +1,260 @@
+.figure {
+  padding: 28px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: var(--surface-raised);
+}
+
+@media (max-width: 760px) {
+  .figure {
+    padding: 18px 14px;
+  }
+}
+
+/* ---- SVG (wide screens) */
+
+.svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  font-family: var(--font-sans);
+}
+
+@media (max-width: 760px) {
+  .svg {
+    display: none;
+  }
+}
+
+.box {
+  fill: var(--surface-raised);
+  stroke: var(--border-strong);
+  stroke-width: 1.2;
+}
+
+.boxAccent {
+  fill: var(--accent-soft);
+  stroke: var(--accent);
+  stroke-width: 1.6;
+}
+
+.group {
+  fill: color-mix(in srgb, var(--surface-2) 70%, transparent);
+  stroke: var(--border);
+  stroke-width: 1;
+}
+
+.boundary {
+  fill: none;
+  stroke: var(--border-strong);
+  stroke-width: 1.2;
+  stroke-dasharray: 6 6;
+}
+
+.title {
+  fill: var(--text);
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.sub {
+  fill: var(--text-2);
+  font-size: 13px;
+}
+
+.groupLabel {
+  fill: var(--text-3);
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.edge,
+.edgeAccent,
+.edgeDashed {
+  fill: none;
+  stroke-width: 1.6;
+  stroke-linejoin: round;
+}
+
+.edge {
+  stroke: var(--text-3);
+}
+
+.edgeAccent {
+  stroke: var(--accent);
+}
+
+.edgeDashed {
+  stroke: var(--accent);
+  stroke-dasharray: 5 4;
+}
+
+.arrowHead {
+  fill: var(--text-3);
+}
+
+.arrowHeadAccent {
+  fill: var(--accent);
+}
+
+.edgeLabel,
+.edgeLabelAccent {
+  font-size: 12.5px;
+}
+
+.edgeLabel {
+  fill: var(--text-2);
+}
+
+.edgeLabelAccent {
+  fill: var(--accent);
+  font-weight: 600;
+}
+
+/* ---- vertical flow (phones) */
+
+.stack {
+  display: none;
+  list-style: none;
+}
+
+@media (max-width: 760px) {
+  .stack {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+.node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border-strong);
+  background: var(--surface-raised);
+  text-align: center;
+}
+
+.node strong {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.node span {
+  font-size: 12.5px;
+  color: var(--text-2);
+}
+
+.nodeAccent {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+/* the arrow between two nodes, with its label */
+.link {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  padding: 8px 0 12px;
+  font-size: 12px;
+  color: var(--text-2);
+  text-align: center;
+}
+
+.link::before {
+  content: "↓";
+  display: block;
+  margin-right: 6px;
+  color: var(--text-3);
+  font-size: 14px;
+  line-height: 1.1;
+}
+
+.linkAccent {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.linkAccent::before {
+  color: var(--accent);
+}
+
+.stackGroup {
+  padding: 10px;
+  border-radius: var(--radius-lg);
+  border: 1px dashed var(--border-strong);
+  background: var(--surface-2);
+}
+
+.stackGroupLabel {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-3);
+  text-align: center;
+}
+
+.stackRow {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.stackRow .node {
+  padding: 8px 4px;
+}
+
+.stackRow .node strong {
+  font-size: 13.5px;
+  overflow-wrap: anywhere;
+}
+
+.stackRow .node span {
+  font-size: 11.5px;
+}
+
+/* ---- caption + key decisions */
+
+.caption {
+  margin-top: 18px;
+  font-size: 14px;
+  color: var(--text-3);
+  text-align: center;
+}
+
+.decisions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 28px;
+  margin-top: 32px;
+  list-style: none;
+}
+
+@media (max-width: 767px) {
+  .decisions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.decision {
+  display: flex;
+  gap: 12px;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--text-2);
+}
+
+.decision strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.decisionIcon {
+  flex-shrink: 0;
+  margin-top: 4px;
+  color: var(--accent);
+}

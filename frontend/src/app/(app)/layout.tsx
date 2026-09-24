@@ -7,7 +7,7 @@
  *   SessionProvider        who is signed in (redirects to /login if nobody)
  *   └ ModelsProvider       GET /api/models/ (+ GPU status)
  *     └ ConversationsProvider   the sidebar list
- *       └ ChatProvider     messages + streaming; survives "/" -> "/c/<id>"
+ *       └ ChatProvider     messages + streaming; survives "/chat" -> "/c/<id>"
  *         └ AppShell       sidebar + main area
  */
 import type { ReactNode } from "react";

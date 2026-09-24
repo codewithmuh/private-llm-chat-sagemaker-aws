@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { PanelLeftClose, ScanText, Search, SquarePen, X } from "lucide-react";
 import { LogoMark } from "@/components/ui/Logo";
+import { APP_HOME } from "@/lib/browser";
 import { useConfig } from "@/providers/ConfigProvider";
 import { useShell } from "./AppShell";
 import { ConversationList } from "./ConversationList";
@@ -29,7 +30,7 @@ export function Sidebar({ hidden, onNavigate }: SidebarProps) {
     <aside className={styles.sidebar} data-hidden={hidden || undefined} inert={hidden} aria-label="Sidebar">
       <div className={styles.top}>
         <Link
-          href="/"
+          href={APP_HOME}
           className={styles.brand}
           onClick={(event) => {
             event.preventDefault();

@@ -7,6 +7,8 @@ import { useConfirm } from "@/components/ui/Confirm";
 import { Dialog } from "@/components/ui/Dialog";
 import { useToast } from "@/components/ui/Toast";
 import { api, errorMessage } from "@/lib/api";
+import { APP_HOME } from "@/lib/browser";
+import { markSignedOut } from "@/lib/session-hint";
 import { useChatActions } from "@/providers/ChatProvider";
 import { useConversations } from "@/providers/ConversationsProvider";
 import { useSession } from "@/providers/SessionProvider";
@@ -32,7 +34,7 @@ export function DataTab() {
     if (await removeAll()) {
       forget(null);
       toast.success("All chats deleted.");
-      router.push("/");
+      router.push(APP_HOME);
     }
   };
 
@@ -96,6 +98,7 @@ function DeleteAccountForm({ onCancel }: { onCancel: () => void }) {
     setError(null);
     try {
       await api.del("/api/auth/me/", user.has_password ? { password: value } : { confirm: "DELETE" });
+      markSignedOut();
       toast.success("Your account was deleted.");
       router.replace("/login");
     } catch (err) {

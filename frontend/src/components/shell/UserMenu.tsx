@@ -1,6 +1,6 @@
 "use client";
 
-import { LogOut, Monitor, Moon, ScanText, Settings, Shield, Sun } from "lucide-react";
+import { BookOpen, House, LogOut, Monitor, Moon, ScanText, Settings, Shield, Sun } from "lucide-react";
 import { Menu, MenuItem, MenuLabel, MenuSeparator } from "@/components/ui/Menu";
 import { API_BASE } from "@/lib/api";
 import { initial } from "@/lib/format";
@@ -34,6 +34,12 @@ export function UserMenu() {
       </MenuItem>
       <MenuItem icon={ScanText} href="/ocr">
         OCR tool
+      </MenuItem>
+      <MenuItem icon={BookOpen} href="/docs">
+        Docs
+      </MenuItem>
+      <MenuItem icon={House} href="/">
+        Home
       </MenuItem>
       {user.is_staff && (
         // Django admin is served by the API (same origin in production).

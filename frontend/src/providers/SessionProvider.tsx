@@ -10,6 +10,8 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { api, errorMessage, isApiError, setUnauthorizedHandler } from "@/lib/api";
+import { APP_HOME } from "@/lib/browser";
+import { markSignedIn, markSignedOut } from "@/lib/session-hint";
 import { isThemePreference } from "@/lib/theme";
 import type { ThemePreference, User, UserPreferences } from "@/lib/types";
 import { useTheme } from "./ThemeProvider";
@@ -46,8 +48,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const redirectToLogin = useCallback(() => {
     if (redirecting.current) return;
     redirecting.current = true;
+    markSignedOut();
     const here = `${window.location.pathname}${window.location.search}`;
-    router.replace(here === "/" ? "/login" : `/login?next=${encodeURIComponent(here)}`);
+    router.replace(here === APP_HOME ? "/login" : `/login?next=${encodeURIComponent(here)}`);
   }, [router]);
 
   // Any 401 from any API call while signed in -> back to the login page.
@@ -62,6 +65,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       .get<User>("/api/auth/me/")
       .then((user) => {
         if (cancelled) return;
+        markSignedIn();
         setState({ status: "ready", user });
         // The saved preference wins, so the theme follows the user across devices.
         if (isThemePreference(user.preferences?.theme)) setTheme(user.preferences.theme);
@@ -105,6 +109,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     } catch {
       // Leave anyway; the session cookie is gone or will expire.
     }
+    markSignedOut();
     // /login is outside this layout, so every provider here (messages,
     // streams, the user) unmounts and its state is dropped.
     router.replace("/login");

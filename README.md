@@ -21,7 +21,7 @@ itself off when nobody is using it.
 [Deploy on AWS](docs/04-deploy-the-full-stack-on-aws.md) ·
 [Docs](docs/)
 
-<img src="docs/images/chat.png" alt="The chat screen: a conversation list on the left, a streamed Markdown answer with a code block on the right" width="900">
+<img src="frontend/public/screenshots/chat.png" alt="The chat screen: a conversation list on the left, a streamed Markdown answer with a code block on the right" width="900">
 
 </div>
 
@@ -65,11 +65,11 @@ deployment**, with every step explained:
 
 | Dark mode | OCR tool | Two-factor setup |
 |---|---|---|
-| <img src="docs/images/chat-dark.png" alt="Chat in dark mode, with a document and an image attached" width="300"> | <img src="docs/images/ocr.png" alt="OCR tool: an image on the left, the extracted text as Markdown on the right" width="300"> | <img src="docs/images/two-factor.png" alt="Authenticator app setup with a QR code and a 6-digit code field" width="300"> |
+| <img src="frontend/public/screenshots/chat-dark.png" alt="Chat in dark mode, with a document and an image attached" width="300"> | <img src="frontend/public/screenshots/ocr.png" alt="OCR tool: an image on the left, the extracted text as Markdown on the right" width="300"> | <img src="frontend/public/screenshots/two-factor.png" alt="Authenticator app setup with a QR code and a 6-digit code field" width="300"> |
 
 | Sign in | Mobile |
 |---|---|
-| <img src="docs/images/login.png" alt="Sign-in page" width="300"> | <img src="docs/images/mobile.png" alt="The chat on a phone-sized screen" width="150"> |
+| <img src="frontend/public/screenshots/login.png" alt="Sign-in page" width="300"> | <img src="frontend/public/screenshots/mobile.png" alt="The chat on a phone-sized screen" width="150"> |
 
 <sub>Screenshots use the built-in mock model, which answers by describing what the backend sent it.</sub>
 

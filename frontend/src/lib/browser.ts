@@ -37,11 +37,14 @@ export function downloadText(filename: string, text: string, type = "text/plain"
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
+/** Where signed-in users land: the new-chat screen. ("/" is the public landing page.) */
+export const APP_HOME = "/chat";
+
 /**
  * Only follow `?next=` values that point inside this app. Anything else
  * ("https://evil.example", "//evil.example") would be an open redirect.
  */
-export function safeNext(next: string | null | undefined, fallback = "/"): string {
+export function safeNext(next: string | null | undefined, fallback = APP_HOME): string {
   if (!next || !next.startsWith("/") || next.startsWith("//") || next.startsWith("/\\")) return fallback;
   return next;
 }

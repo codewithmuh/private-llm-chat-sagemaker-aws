@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { api } from "@/lib/api";
+import { maybeSignedIn, markSignedOut } from "@/lib/session-hint";
 import type { User } from "@/lib/types";
 import { useFinishLogin } from "./useFinishLogin";
 
@@ -9,6 +10,8 @@ import { useFinishLogin } from "./useFinishLogin";
 export function useRedirectIfSignedIn(next: string): void {
   const finishLogin = useFinishLogin(next);
   useEffect(() => {
+    // Only ask when this browser signed in before (see lib/session-hint.ts).
+    if (!maybeSignedIn()) return;
     let cancelled = false;
     api
       .get<User>("/api/auth/me/")
@@ -16,7 +19,8 @@ export function useRedirectIfSignedIn(next: string): void {
         if (!cancelled) finishLogin();
       })
       .catch(() => {
-        // 401: not signed in, which is what we expect here.
+        // The session expired: forget the hint.
+        markSignedOut();
       });
     return () => {
       cancelled = true;

@@ -2,7 +2,7 @@
 
 /**
  * One conversation: header with the model picker, GPU status banner,
- * messages, and the composer. Used by both "/" (conversationId = null, a new
+ * messages, and the composer. Used by both "/chat" (conversationId = null, a new
  * chat) and "/c/[id]".
  */
 import { useCallback, useEffect, useRef, useState, type DragEvent } from "react";
@@ -11,6 +11,7 @@ import { Upload } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { errorMessage, isApiError } from "@/lib/api";
+import { APP_HOME } from "@/lib/browser";
 import type { Attachment } from "@/lib/types";
 import { useChatActions, useThread } from "@/providers/ChatProvider";
 import { useConversations } from "@/providers/ConversationsProvider";
@@ -31,7 +32,7 @@ export function ChatView({ conversationId: routeId }: { conversationId: string |
   const { defaultModelId, getModel } = useModels();
   const composerRef = useRef<ComposerHandle>(null);
 
-  // On "/", the conversation is created by the first send. We show it right
+  // On "/chat", the conversation is created by the first send. We show it right
   // away (createdId) while the URL changes to /c/<id> in the background.
   const [createdId, setCreatedId] = useState<string | null>(null);
   const conversationId = routeId ?? createdId;
@@ -150,7 +151,7 @@ export function ChatView({ conversationId: routeId }: { conversationId: string |
               Try again
             </button>
           )}
-          <button type="button" className="btn btn-primary" onClick={() => router.push("/")}>
+          <button type="button" className="btn btn-primary" onClick={() => router.push(APP_HOME)}>
             New chat
           </button>
         </div>
