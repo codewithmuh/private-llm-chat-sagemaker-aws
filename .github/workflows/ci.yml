@@ -84,7 +84,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: docker/setup-buildx-action@v3
       - name: api
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: backend
           target: api
@@ -92,7 +92,7 @@ jobs:
           cache-from: type=gha,scope=api
           cache-to: type=gha,mode=max,scope=api
       - name: web
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           # Repository root: the web build reads docs/ and ml/models/.
           context: .
@@ -101,7 +101,7 @@ jobs:
           cache-from: type=gha,scope=web
           cache-to: type=gha,mode=max,scope=web
       - name: mock-llm
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: ml/mock
           push: false
