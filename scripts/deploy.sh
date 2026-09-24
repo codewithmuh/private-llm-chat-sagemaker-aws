@@ -116,7 +116,7 @@ elif [ "$SKIP_BUILD" = true ] && [ -f "$TF_DIR/image.auto.tfvars" ]; then
   TAG="$(sed -nE 's/^image_tag *= *"([^"]+)".*/\1/p' "$TF_DIR/image.auto.tfvars")"
 else
   TAG="$(git -C "$ROOT" rev-parse --short=12 HEAD)"
-  if [ -n "$(git -C "$ROOT" status --porcelain -- backend frontend)" ]; then
+  if [ -n "$(git -C "$ROOT" status --porcelain -- backend frontend docs ml/models)" ]; then
     TAG="$TAG-dirty-$(date +%Y%m%d%H%M%S)"
   fi
 fi
@@ -158,14 +158,17 @@ if [ "$SKIP_BUILD" = false ]; then
   if image_exists "$WEB_REPO" "$TAG"; then
     echo "web:$TAG is already in ECR, skipping the build."
   else
-    say "Building and pushing web:$TAG (frontend/)"
+    say "Building and pushing web:$TAG (frontend/, with docs/ and ml/models/)"
     # NEXT_PUBLIC_API_URL is baked in at BUILD time. Empty = "same origin":
     # the browser calls /api/... on the domain it loaded the page from, and
     # CloudFront routes that to Django.
+    # The context is the repository root: the /docs pages are built from
+    # docs/*.md and the landing page reads ml/models/catalog.json.
     docker buildx build --platform linux/arm64 --provenance=false \
+      --file "$ROOT/frontend/Dockerfile" \
       --build-arg NEXT_PUBLIC_API_URL= \
       --tag "$WEB_REPO:$TAG" \
-      --push "$ROOT/frontend"
+      --push "$ROOT"
   fi
 else
   image_exists "$API_REPO" "$TAG" || die "api:$TAG is not in ECR. Build it first (run without --skip-build)."

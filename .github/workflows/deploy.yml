@@ -23,6 +23,8 @@ on:
     paths:
       - "backend/**"
       - "frontend/**"
+      - "docs/**"
+      - "ml/models/**"
       - "infra/terraform/**"
       - ".github/workflows/deploy.yml"
   workflow_dispatch:
@@ -94,10 +96,14 @@ jobs:
         include:
           - component: api
             context: backend
+            file: backend/Dockerfile
             target: api
             build_args: ""
           - component: web
-            context: frontend
+            # The repository root: the /docs pages and the model table are
+            # built from docs/ and ml/models/ (see frontend/Dockerfile).
+            context: .
+            file: frontend/Dockerfile
             target: ""
             # Empty = the browser calls /api/ on the same origin (CloudFront routes it).
             build_args: NEXT_PUBLIC_API_URL=
@@ -121,6 +127,7 @@ jobs:
         uses: docker/build-push-action@v7
         with:
           context: ${{ matrix.context }}
+          file: ${{ matrix.file }}
           target: ${{ matrix.target }}
           build-args: ${{ matrix.build_args }}
           platforms: linux/arm64

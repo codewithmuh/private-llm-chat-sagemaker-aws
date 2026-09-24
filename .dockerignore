@@ -1,0 +1,31 @@
+# Docker build context filter for images built from the REPOSITORY ROOT.
+# Only the web image is (frontend/Dockerfile): it needs frontend/, docs/ and
+# ml/models/. The api and mock images use backend/ and ml/mock/ as their own
+# contexts, with their own .dockerignore files.
+
+# Start from nothing, then allow what the web build reads.
+*
+!frontend/
+!docs/
+!ml/models/
+
+# Never send these, even inside the allowed folders.
+**/node_modules
+**/.next
+**/out
+**/*.tsbuildinfo
+**/next-env.d.ts
+**/.env
+**/.env.*
+**/.venv
+**/*.tfstate*
+**/.DS_Store
+**/npm-debug.log*
+frontend/Dockerfile
+frontend/README.md
+
+# Listed for clarity (already excluded by "*" above).
+.git
+backend/
+infra/
+notes/

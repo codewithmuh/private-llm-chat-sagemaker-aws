@@ -94,7 +94,9 @@ jobs:
       - name: web
         uses: docker/build-push-action@v6
         with:
-          context: frontend
+          # Repository root: the web build reads docs/ and ml/models/.
+          context: .
+          file: frontend/Dockerfile
           push: false
           cache-from: type=gha,scope=web
           cache-to: type=gha,mode=max,scope=web

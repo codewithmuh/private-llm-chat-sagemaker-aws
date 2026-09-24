@@ -75,7 +75,10 @@ services:
 
   web:
     build:
-      context: ./frontend
+      # The repository root: the docs pages and the model table are built
+      # from docs/ and ml/models/ (see frontend/Dockerfile).
+      context: .
+      dockerfile: frontend/Dockerfile
       args:
         NEXT_PUBLIC_API_URL: http://localhost:${API_PORT:-8000}
     ports: ["${WEB_PORT:-3000}:3000"]
