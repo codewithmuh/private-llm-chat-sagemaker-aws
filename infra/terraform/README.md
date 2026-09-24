@@ -2,7 +2,7 @@
 
 Everything the app needs on AWS, in one Terraform root module. For the
 step-by-step deployment guide (quota request, Google sign-in, email, first
-login) read [docs/deploy-aws.md](../../docs/deploy-aws.md). For money, read
+login) read [docs/04-deploy-the-full-stack-on-aws.md](../../docs/04-deploy-the-full-stack-on-aws.md). For money, read
 [docs/cost.md](../../docs/cost.md). This page explains the code.
 
 > **Cost warning.** The baseline stack costs roughly **$80–110 per month**
@@ -140,6 +140,18 @@ ones are deleted. A running endpoint keeps working on its old configuration;
 the controller uses the new one the next time it starts the endpoint. To
 switch right away: `./scripts/gpu.sh stop <model>` and chat again.
 
+**Advanced: several models on one GPU.** `container = "router"` runs our own
+image from [`ml/vllm-router`](../../ml/vllm-router) instead (set
+`enable_vllm_router_repo = true`, build it with the *Build vLLM router image*
+workflow, set `vllm_router_image_tag`). Terraform passes it `MODELS_JSON`, by
+default one entry for this model:
+`[{"name": "<hf_model_id>", "gpu_fraction": <gpu_memory_utilization>, "args": ["--max-model-len", "..."]}]`.
+Override it with `extra_env = { MODELS_JSON = "..." }` to load more models
+(their `gpu_fraction` values must add up to less than 1), and list the extra
+models in `extra_llm_models` with `provider = "sagemaker"`, the same
+`endpoint_name`, and `scaling = "manual"` so only the main entry starts and
+stops the endpoint.
+
 The api receives the models as the `LLM_MODELS` JSON (see
 [docs/configuration.md](../../docs/configuration.md)); `terraform output llm_models`
 shows it. Add non-SageMaker providers (OpenAI, any OpenAI-compatible server)
@@ -205,7 +217,7 @@ off deliberately first.
 
 | Symptom | Likely cause | Fix |
 |---|---|---|
-| Model stuck on "starting", controller log / admin shows `ResourceLimitExceeded ... ml.g6e.xlarge for endpoint usage` | Your account's SageMaker quota for that instance is 0 (the default for new accounts) | Service Quotas → Amazon SageMaker → "ml.g6e.xlarge for endpoint usage" → request 1 ([guide](../../docs/deploy-aws.md#2-get-gpu-quota-for-sagemaker)). Or choose an instance you have quota for |
+| Model stuck on "starting", controller log / admin shows `ResourceLimitExceeded ... ml.g6e.xlarge for endpoint usage` | Your account's SageMaker quota for that instance is 0 (the default for new accounts) | Service Quotas → Amazon SageMaker → "ml.g6e.xlarge for endpoint usage" → request 1 ([guide](../../docs/04-deploy-the-full-stack-on-aws.md#2-get-gpu-quota-for-sagemaker)). Or choose an instance you have quota for |
 | Endpoint `Failed`, log shows `401`/`403`, "gated repo" or "Access to model ... is restricted" | Gated Hugging Face model | Accept the license on the model page, set `hf_token`, apply |
 | Endpoint `Failed` after 10–30 min: "did not pass the ping health check"; log shows `CUDA out of memory` or "No available memory for the cache blocks" | Model + KV cache do not fit the GPU | Lower `max_model_len`, use an FP8/AWQ variant, or a bigger instance |
 | Endpoint `Failed`: "CUDA driver version is insufficient" / "forward compatibility" | Host NVIDIA driver older than the container's CUDA | Keep `inference_ami_version = "al2023-ami-sagemaker-inference-gpu-4-1"` (driver 580, CUDA 13) for the cu130 DLC |

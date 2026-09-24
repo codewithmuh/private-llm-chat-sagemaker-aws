@@ -77,7 +77,7 @@ def mock_answer(request: ChatRequest) -> str:
         "| `openai` | vLLM, Ollama, LM Studio... |",
         "| `mock` | right here, in the backend |",
         "",
-        "Inline math works too: $E = mc^2$.",
+        "Math works too: $$E = mc^2$$",
         "",
         "To talk to a real model, follow **docs/02-run-a-real-model-locally.md** "
         "(Ollama) or **docs/03-deploy-a-model-on-sagemaker.md**.",

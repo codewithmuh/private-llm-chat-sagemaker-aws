@@ -36,7 +36,13 @@ export function OtpInput({
   // `value` keeps a space for an empty box in the middle ("12 456"), so the
   // other digits stay in place. A complete code is always six digits.
   const digits = Array.from({ length }, (_, i) => (value[i] ?? "").trim());
-  const emit = (next: string[]) => onChange(next.map((d) => d || " ").join("").trimEnd());
+  const emit = (next: string[]) =>
+    onChange(
+      next
+        .map((d) => d || " ")
+        .join("")
+        .trimEnd(),
+    );
 
   const focusBox = (index: number) => {
     const box = inputs.current[Math.max(0, Math.min(index, length - 1))];

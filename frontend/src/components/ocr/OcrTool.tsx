@@ -176,7 +176,8 @@ export function OcrTool() {
         <div className={styles.intro}>
           <h1 className={styles.title}>Extract text from an image or PDF</h1>
           <p className="muted">
-            Receipts, screenshots, scanned pages… The text is read on your own infrastructure; nothing leaves your cloud.
+            Receipts, screenshots, scanned pages… The text is read on your own infrastructure; nothing leaves your
+            cloud.
           </p>
         </div>
         <ModelSelect value={modelId} onChange={setModelId} models={ocrModels} />
@@ -253,7 +254,11 @@ export function OcrTool() {
           <p className={styles.previewCaption}>{picked.name}</p>
         </section>
 
-        <section className={styles.result} aria-label="Extracted text" aria-busy={phase === "uploading" || phase === "running"}>
+        <section
+          className={styles.result}
+          aria-label="Extracted text"
+          aria-busy={phase === "uploading" || phase === "running"}
+        >
           {phase === "uploading" && (
             <div className={styles.status}>
               <ProgressRing value={progress} size={36} stroke={3} />
@@ -314,7 +319,8 @@ export function OcrTool() {
 
               <div className={styles.resultActions}>
                 <button type="button" className="btn btn-sm btn-secondary" onClick={() => void copy(result.text)}>
-                  {copied ? <Check size={14} aria-hidden /> : <Copy size={14} aria-hidden />} {copied ? "Copied" : "Copy"}
+                  {copied ? <Check size={14} aria-hidden /> : <Copy size={14} aria-hidden />}{" "}
+                  {copied ? "Copied" : "Copy"}
                 </button>
                 <button
                   type="button"
@@ -323,12 +329,21 @@ export function OcrTool() {
                 >
                   <Download size={14} aria-hidden /> .md
                 </button>
-                <button type="button" className="btn btn-sm btn-secondary" onClick={() => downloadText(`${baseName}.txt`, result.text)}>
+                <button
+                  type="button"
+                  className="btn btn-sm btn-secondary"
+                  onClick={() => downloadText(`${baseName}.txt`, result.text)}
+                >
                   <Download size={14} aria-hidden /> .txt
                 </button>
-                <button type="button" className="btn btn-sm btn-primary" onClick={() => void askInChat()} disabled={asking}>
-                  {asking ? <span className="spinner" aria-hidden /> : <MessageSquarePlus size={14} aria-hidden />} Ask about
-                  it in a new chat
+                <button
+                  type="button"
+                  className="btn btn-sm btn-primary"
+                  onClick={() => void askInChat()}
+                  disabled={asking}
+                >
+                  {asking ? <span className="spinner" aria-hidden /> : <MessageSquarePlus size={14} aria-hidden />} Ask
+                  about it in a new chat
                 </button>
               </div>
             </>

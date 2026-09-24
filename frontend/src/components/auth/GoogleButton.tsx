@@ -55,7 +55,11 @@ export function GoogleButton({ clientId, onCredential, text = "signin_with" }: G
   }, [clientId, resolved, text]);
 
   if (failed) {
-    return <p className="hint" style={{ textAlign: "center" }}>Google sign-in couldn&apos;t be loaded.</p>;
+    return (
+      <p className="hint" style={{ textAlign: "center" }}>
+        Google sign-in couldn&apos;t be loaded.
+      </p>
+    );
   }
   return (
     <div className={styles.google}>

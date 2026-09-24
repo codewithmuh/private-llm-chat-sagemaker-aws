@@ -152,7 +152,7 @@ variable "google_client_id" {
   description = <<-EOT
     Google OAuth "Web application" client id (GOOGLE_CLIENT_ID). Empty hides
     "Sign in with Google". Its "Authorized JavaScript origins" must contain the
-    app_url output (see docs/deploy-aws.md).
+    app_url output (see docs/04-deploy-the-full-stack-on-aws.md).
   EOT
   type        = string
   default     = ""

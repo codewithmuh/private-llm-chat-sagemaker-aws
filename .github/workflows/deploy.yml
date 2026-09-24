@@ -10,7 +10,7 @@
 #      Repository SECRET   TFVARS_B64      = output of: base64 < infra/terraform/terraform.tfvars
 #      and github_terraform_apply = true in your tfvars (gives the role admin-like rights)
 #   Other optional variables: NAME_PREFIX (default llmchat-dev), TF_STATE_KEY.
-# Full walkthrough: docs/deploy-aws.md, "Deploy from GitHub Actions".
+# Full walkthrough: docs/04-deploy-the-full-stack-on-aws.md, "Deploy from GitHub Actions".
 #
 # No AWS account ids or keys live in this file or in GitHub: the job receives
 # short-lived credentials through OIDC.
@@ -220,6 +220,6 @@ jobs:
           IMAGE_TAG=$IMAGE_TAG ./scripts/deploy.sh --skip-build
           \`\`\`
 
-          To let CI deploy by itself, see docs/deploy-aws.md, "Deploy from GitHub Actions".
+          To let CI deploy by itself, see docs/04-deploy-the-full-stack-on-aws.md, "Deploy from GitHub Actions".
           EOF
           echo "Images pushed with tag $IMAGE_TAG. Roll out: IMAGE_TAG=$IMAGE_TAG ./scripts/deploy.sh --skip-build"

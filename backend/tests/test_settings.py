@@ -8,7 +8,13 @@ from config.settings.base import BASE_DIR, database_from_env
 def test_database_url_postgres(monkeypatch):
     monkeypatch.setenv("DATABASE_URL", "postgres://u%40x:p%2Fw@db.example.com:6543/chat")
     db = database_from_env()
-    assert (db["USER"], db["PASSWORD"], db["HOST"], db["PORT"], db["NAME"]) == ("u@x", "p/w", "db.example.com", "6543", "chat")
+    assert (db["USER"], db["PASSWORD"], db["HOST"], db["PORT"], db["NAME"]) == (
+        "u@x",
+        "p/w",
+        "db.example.com",
+        "6543",
+        "chat",
+    )
 
 
 def test_database_url_sqlite_relative_and_absolute(monkeypatch):

@@ -82,7 +82,9 @@ export function ChatView({ conversationId: routeId }: { conversationId: string |
         if (isApiError(error) && error.code === "model_starting") {
           setAwaitingModel(true);
           const wait = error.retryAfter ? ` (about ${Math.max(1, Math.round(error.retryAfter / 60))} min)` : "";
-          toast.info(`The model is starting up${wait}. Your message is still in the box; send it again once it's ready.`);
+          toast.info(
+            `The model is starting up${wait}. Your message is still in the box; send it again once it's ready.`,
+          );
         } else if (!exists) {
           toast.error(errorMessage(error, "Couldn't start a new chat."));
         }
@@ -100,7 +102,6 @@ export function ChatView({ conversationId: routeId }: { conversationId: string |
   const onRegenerate = useCallback(() => {
     if (conversationId) regenerate(conversationId, modelId);
   }, [regenerate, conversationId, modelId]);
-
 
   const onDismissError = useCallback(() => {
     if (conversationId) dismissError(conversationId);

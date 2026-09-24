@@ -171,3 +171,12 @@ def test_sagemaker_model_error_is_decoded():
     with pytest.raises(ProviderError) as info:
         provider.complete(ChatRequest(messages=[]))
     assert info.value.code == "context_too_long"
+
+
+def test_api_key_can_come_from_the_environment(monkeypatch):
+    from apps.llm.providers import resolve_secret
+
+    monkeypatch.setenv("OPENAI_KEY", "sk-from-env")
+    assert resolve_secret("env:OPENAI_KEY") == "sk-from-env"
+    assert resolve_secret("plain") == "plain"
+    assert resolve_secret("env:MISSING") == ""

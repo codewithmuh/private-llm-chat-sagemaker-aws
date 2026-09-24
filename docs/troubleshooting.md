@@ -4,6 +4,7 @@
 
 | Symptom | Fix |
 |---|---|
+| The page says **"Not found. Try again"** | The web app can't reach the API. It expects Django on http://localhost:8000: start it with `make up` (Docker) or `make backend-dev` (no Docker). If your API runs elsewhere, set `NEXT_PUBLIC_API_URL` before `npm run dev` |
 | `port is already allocated` | Something else uses 3000/8000/8025. Set `WEB_PORT`, `API_PORT`, `MAILPIT_PORT` in `.env` |
 | Sign-up says "check your email" but nothing arrives | Local email goes to **Mailpit**: http://localhost:8025. With `make backend-dev`, the code is printed in the terminal |
 | "Your session expired. Refresh the page" on every action | Open the app on `http://localhost:3000`, not `127.0.0.1`: cookies from `localhost:8000` aren't sent to `127.0.0.1` |
@@ -22,6 +23,7 @@
 | Endpoint `Failed`: "did not pass the ping health check" | Look at the container's logs: CloudWatch → `/aws/sagemaker/Endpoints/<name>`. Usual causes below |
 | Logs: `401` / `gated repo` / `Access to model ... is restricted` | Gated model: accept the licence on huggingface.co and pass a token (`--hf-token` / `hf_token`) |
 | Logs: `CUDA out of memory` or `max_model_len ... larger than the maximum number of tokens that can be stored in KV cache` | Lower `max_model_len`, use an FP8 variant, or a bigger instance ([models.md](models.md#will-this-model-fit-on-that-gpu)) |
+| Logs: `CUDA driver version is insufficient` / `forward compatibility was attempted on non supported HW` | The GPU host image has an older NVIDIA driver than the container needs. The CUDA 13 vLLM container needs `InferenceAmiVersion = al2023-ami-sagemaker-inference-gpu-4-1` (driver 580), which `deploy.py` and Terraform set by default |
 | Logs: `model type ... not supported` | This vLLM version doesn't know the architecture. Use a newer DLC tag (`vllm_dlc_image`) or another model |
 | Takes 15+ minutes to start | Normal for big models downloading from Hugging Face. Stage weights in S3 ([advanced](05-advanced.md#faster-cold-starts-and-no-internet-weights-in-s3)) |
 | App: "The model's GPU is asleep" and never wakes | Is the gpu-controller running? On AWS: ECS → service `gpu-controller` → logs. Locally it only runs with `make up-aws`. `/admin/` → LLM models shows the last error |

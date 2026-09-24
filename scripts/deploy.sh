@@ -51,7 +51,7 @@ die() {
 # ------------------------------------------------------------- preflight ----
 
 for cmd in aws docker terraform git; do
-  command -v "$cmd" >/dev/null 2>&1 || die "'$cmd' is not installed. See docs/deploy-aws.md, 'Prerequisites'."
+  command -v "$cmd" >/dev/null 2>&1 || die "'$cmd' is not installed. See docs/04-deploy-the-full-stack-on-aws.md, 'Prerequisites'."
 done
 docker buildx version >/dev/null 2>&1 || die "docker buildx is missing (it ships with Docker Desktop and recent Docker Engine)."
 docker info >/dev/null 2>&1 || die "Docker is not running."

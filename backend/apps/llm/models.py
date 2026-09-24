@@ -94,6 +94,26 @@ class LLMModel(models.Model):
     def is_sagemaker(self) -> bool:
         return self.provider == self.Provider.SAGEMAKER
 
+    def endpoint_owner(self) -> LLMModel:
+        """The model that starts and stops this model's endpoint.
+
+        Several models can share one endpoint (ml/vllm-router serves them all
+        from one GPU). One of them has a real scaling mode and the others are
+        "manual"; the first non-manual sibling is the owner, and its scaling
+        mode applies to all of them. A model alone is its own owner.
+        """
+        if not self.is_sagemaker or self.scaling != self.Scaling.MANUAL or not self.endpoint_name:
+            return self
+        owner = (
+            LLMModel.objects.filter(
+                provider=self.Provider.SAGEMAKER, endpoint_name=self.endpoint_name, region=self.region, enabled=True
+            )
+            .exclude(scaling=self.Scaling.MANUAL)
+            .order_by("sort", "name")
+            .first()
+        )
+        return owner or self
+
     def public_status(self) -> tuple[str, str]:
         """(status, detail) as shown in the UI. See docs/api.md."""
         if not self.is_sagemaker:
@@ -106,7 +126,7 @@ class LLMModel(models.Model):
         if s in ("Failed",):
             return "failed", "The GPU endpoint failed to start. An admin can see why in /admin/."
         if s in ("Deleting", "NotFound", "OutOfService"):
-            if self.scaling == self.Scaling.ON_DEMAND:
+            if self.endpoint_owner().scaling == self.Scaling.ON_DEMAND:
                 if self.wake_requested_at or self._recently_used():
                     return "starting", "Waking up the GPU. This usually takes 5 to 15 minutes."
                 return "stopped", "Asleep to save money. Send a message to wake it up (5 to 15 minutes)."

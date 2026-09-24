@@ -1,6 +1,6 @@
 .banner {
   padding: 0 16px 8px;
-  animation: fade-in var(--normal) var(--ease);
+  animation: var(--anim-fade-in);
 }
 
 .inner {

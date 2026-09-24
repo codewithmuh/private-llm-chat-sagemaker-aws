@@ -65,14 +65,7 @@ export function Avatar({ name, url, size = 30 }: { name: string; url: string | n
     return (
       // A tiny remote avatar (e.g. Google): next/image would add nothing here.
       // eslint-disable-next-line @next/next/no-img-element
-      <img
-        src={url}
-        alt=""
-        width={size}
-        height={size}
-        className={styles.avatar}
-        referrerPolicy="no-referrer"
-      />
+      <img src={url} alt="" width={size} height={size} className={styles.avatar} referrerPolicy="no-referrer" />
     );
   }
   return (

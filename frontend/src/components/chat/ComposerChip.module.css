@@ -1,6 +1,6 @@
 .chip {
   position: relative;
-  animation: pop-in var(--fast) var(--ease);
+  animation: var(--anim-pop-in-fast);
 }
 
 .thumb {

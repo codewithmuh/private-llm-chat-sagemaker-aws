@@ -91,7 +91,7 @@ Because the browser sees a single origin, cookies and CSRF need no cross-origin 
 
     // provider = "openai" (vLLM, Ollama, LM Studio, OpenAI itself, ...)
     "base_url": "http://ollama:11434/v1",
-    "api_key": "",
+    "api_key": "",                           // or "env:OPENAI_API_KEY": read it from that environment variable
 
     // provider = "sagemaker"
     "endpoint_name": "llmchat-dev-qwen3-vl-8b",
@@ -99,7 +99,7 @@ Because the browser sees a single origin, cookies and CSRF need no cross-origin 
     "region": "us-east-1",                   // optional, defaults to AWS_REGION
     "scaling": "on_demand",                  // "on_demand" | "always_on" | "off" | "manual"
     "idle_minutes": 30,                      // on_demand: delete after this long unused
-    "hourly_cost_usd": 1.86,                 // shown in the admin
+    "hourly_cost_usd": 2.61,                 // shown in the admin
 
     // capabilities & limits
     "vision": true,
@@ -122,6 +122,15 @@ Because the browser sees a single origin, cookies and CSRF need no cross-origin 
 | `always_on` | keeps the endpoint running |
 | `off` | deletes it and keeps it deleted |
 | `manual` | never touches it. You created the endpoint yourself (e.g. with `ml/sagemaker/deploy.py`) |
+
+**Several models on one endpoint** (the [vLLM router](../ml/vllm-router/README.md)):
+give them the same `endpoint_name`. One of them gets a real `scaling` mode (it
+"owns" the endpoint); the others use `manual` and follow the owner. Chatting
+with any of them wakes the endpoint and keeps it alive.
+
+**Keys for OpenAI-compatible providers:** `LLM_MODELS` is not a secret store (on
+AWS it is visible in the ECS task definition). Write `"api_key": "env:NAME"` and
+provide the environment variable `NAME` from a secret instead.
 
 ---
 

@@ -6,8 +6,9 @@
    ======================================================================== */
 
 :root {
-  --font-sans: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial,
-    "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+  --font-sans:
+    ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans",
+    sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
   --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
 
   /* surfaces */
@@ -79,10 +80,17 @@
   --reading-width: 768px;
   --header-height: 56px;
 
-  /* motion */
+  /* motion. CSS Modules would rename a keyframes name used inside a module
+     (e.g. "pop-in" -> "Menu-module__pop-in"), so modules use these tokens:
+     `animation: var(--anim-pop-in)`. The @keyframes live below. */
   --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
   --fast: 120ms;
   --normal: 200ms;
+  --anim-fade-in: fade-in var(--normal) var(--ease);
+  --anim-fade-in-fast: fade-in var(--fast) var(--ease);
+  --anim-pop-in: pop-in var(--normal) var(--ease);
+  --anim-pop-in-fast: pop-in var(--fast) var(--ease);
+  --anim-pulse: pulse 1.6s ease-in-out infinite;
 
   /* syntax highlighting (highlight.js classes, see styles/highlight.css) */
   --hl-comment: #6e7781;
@@ -441,7 +449,8 @@ svg {
 .select {
   appearance: none;
   padding-right: 36px;
-  background-image: linear-gradient(45deg, transparent 50%, var(--text-2) 50%),
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--text-2) 50%),
     linear-gradient(135deg, var(--text-2) 50%, transparent 50%);
   background-position:
     calc(100% - 18px) 50%,

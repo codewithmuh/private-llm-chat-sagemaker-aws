@@ -35,7 +35,9 @@ function SettingsContent() {
             label="Settings sections"
             tabs={TABS}
             active={tab}
-            onChange={(next) => router.replace(next === "general" ? pathname : `${pathname}?tab=${next}`, { scroll: false })}
+            onChange={(next) =>
+              router.replace(next === "general" ? pathname : `${pathname}?tab=${next}`, { scroll: false })
+            }
           />
         </div>
         <TabPanel>

@@ -135,7 +135,11 @@ function CodePromptBody({
         <button type="button" className="btn btn-secondary" onClick={onClose}>
           Cancel
         </button>
-        <button type="submit" className={`btn ${danger ? "btn-danger" : "btn-primary"}`} disabled={busy || !code.trim()}>
+        <button
+          type="submit"
+          className={`btn ${danger ? "btn-danger" : "btn-primary"}`}
+          disabled={busy || !code.trim()}
+        >
           {busy && <span className="spinner" aria-hidden />} {submitLabel}
         </button>
       </div>

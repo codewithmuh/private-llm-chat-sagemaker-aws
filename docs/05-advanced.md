@@ -8,10 +8,10 @@ in the order people need them.
 Every SageMaker model has a `scaling` mode, handled by the GPU controller
 (`backend/apps/llm/controller.py`, running as the `gpu-controller` ECS service):
 
-| Mode | Behaviour | Monthly cost of an ml.g6e.xlarge (~$2.2/h) |
+| Mode | Behaviour | Monthly cost of an ml.g6e.xlarge ($2.61/h, us-east-1) |
 |---|---|---|
-| `always_on` | Always running; answers in seconds | ~$1,600 |
-| `on_demand` | Created on the first message, deleted after `idle_minutes` (default 30) | Only the hours used. 2 h/day ≈ $135 |
+| `always_on` | Always running; answers in seconds | ~$1,900 |
+| `on_demand` | Created on the first message, deleted after `idle_minutes` (default 30) | Only the hours used. 2 h/day ≈ $160 |
 | `off` | Kept deleted | $0 |
 
 With `on_demand`, the first message after a quiet period waits for a **cold start**
@@ -50,10 +50,12 @@ fast text model for the price of one instance. See
 - **More concurrent answers per model:** vLLM batches requests continuously, so one GPU
   serves many users at once. Watch `ConcurrentRequestsPerModel` / `ModelLatency` in
   CloudWatch before adding instances.
-- **More instances:** raise `instance_count` for the model, or add SageMaker endpoint
-  auto scaling (Application Auto Scaling on the variant's
-  `SageMakerVariantInvocationsPerInstance`). Note: `on_demand` deletes and recreates the
-  endpoint, so combine auto scaling with `always_on`.
+- **More instances:** each endpoint starts with one instance
+  (`initial_instance_count = 1` in `infra/terraform/modules/sagemaker/main.tf`). Raise
+  it, or add SageMaker endpoint auto scaling (Application Auto Scaling on the variant's
+  `SageMakerVariantInvocationsPerInstance`) — a good first contribution. Note:
+  `on_demand` deletes and recreates the endpoint, so combine auto scaling with
+  `always_on`.
 - **More API capacity:** each api task streams 32 answers at once (2 gunicorn workers ×
   16 threads). Raise the ECS service's `desired_count`; the ALB spreads load.
 

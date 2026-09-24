@@ -55,13 +55,14 @@ Every error has the same shape:
 | 400 | `invalid_credentials` | Wrong email or password |
 | 400 | `invalid_code` / `expired_code` | A one-time code is wrong or expired |
 | 401 | `not_authenticated` | No session, or it expired |
+| 401 | `no_pending_login` | `login/mfa/` without a recent password/Google step (it expires after 10 min): start the login again |
 | 403 | `email_not_verified` | Log in refused until the email address is verified |
 | 403 | `permission_denied` / `csrf_failed` | Not allowed / missing CSRF header |
 | 404 | `not_found` | Unknown id, or it belongs to another user |
 | 413 | `file_too_large` | Upload bigger than `max_upload_mb` |
 | 415 | `unsupported_file_type` | Upload type not accepted |
 | 429 | `throttled` / `too_many_attempts` | Rate limited |
-| 503 | `model_starting` | The model's GPU endpoint is starting; retry later |
+| 503 | `model_starting` | The model's GPU endpoint is starting; retry later. The body also has `retry_after` (seconds) |
 | 503 | `model_unavailable` | The model is stopped/off or its endpoint failed |
 
 ---
@@ -169,10 +170,10 @@ The verification email contains a 6-digit code (valid 15 minutes, 5 attempts).
 | `POST mfa/totp/setup/` | — | `{"secret":"BASE32…","otpauth_url":"otpauth://totp/…","qr_svg":"<svg …>"}`. Nothing is enabled yet |
 | `POST mfa/totp/confirm/` | `{code}` | `{"status":"ok","recovery_codes":["abcd-efgh", …]}`, TOTP enabled. `recovery_codes` is non-empty only when this is the user's **first** MFA method; show them once |
 | `POST mfa/totp/disable/` | `{code}` (TOTP or recovery code) | `{"status":"ok"}` |
-| `POST mfa/email/send/` | — | `{"status":"sent"}`, a code to the account email (used to enable **or** disable email 2FA) |
+| `POST mfa/email/send/` | — | `{"status":"sent"}`, a code to the account email: used to enable or disable email 2FA, and to regenerate recovery codes |
 | `POST mfa/email/confirm/` | `{code}` | `{"status":"ok","recovery_codes":[…]}`, email 2FA enabled (same rule for `recovery_codes`) |
 | `POST mfa/email/disable/` | `{code}` (emailed code or recovery code) | `{"status":"ok"}` |
-| `POST mfa/recovery-codes/` | `{code}` (a TOTP or emailed code) | `{"recovery_codes":[…]}`, replaces the old set |
+| `POST mfa/recovery-codes/` | `{code}` (a TOTP code, or a code from `mfa/email/send/`) | `{"recovery_codes":[…]}`, replaces the old set |
 
 When the last method is disabled, recovery codes are deleted and
 `mfa.enabled` becomes `false`.
@@ -254,7 +255,10 @@ server then generates one and sends a `title` event on the stream.
 }
 ```
 
-`role`: `"user"` or `"assistant"`. `status`: `"complete"`, `"streaming"`,
+`role`: `"user"` or `"assistant"`. An assistant `content` may start with
+`<think>…</think>`: the reasoning of a "thinking" model (DeepSeek-R1, Qwen3),
+which the UI shows as a collapsible block. While streaming, the closing tag
+may not have arrived yet. `status`: `"complete"`, `"streaming"`,
 `"stopped"` (user pressed stop, `content` is the partial answer) or `"error"`
 (`error` holds a message). `usage` and `duration_ms` may be `null`.
 
@@ -262,7 +266,7 @@ server then generates one and sends a `title` event on the stream.
 
 | Method & path | Body / query | Success |
 |---|---|---|
-| `GET /api/conversations/` | `?q=search` (optional, matches titles) | `{"results":[Conversation…]}`, pinned first, then most recently updated (max 500) |
+| `GET /api/conversations/` | `?q=search` (optional, matches titles) | `{"results":[Conversation…]}`, pinned first, then most recently updated (max 500). Conversations without messages are left out |
 | `POST /api/conversations/` | `{model?, title?, system_prompt?}` | `201 Conversation` |
 | `GET /api/conversations/{id}/` | — | `Conversation` plus `"messages":[Message…]` (oldest first) |
 | `PATCH /api/conversations/{id}/` | `{title?, model?, pinned?, system_prompt?}` | `Conversation` |

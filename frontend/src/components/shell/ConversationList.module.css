@@ -41,5 +41,5 @@
   margin: 14px 10px;
   border-radius: var(--radius-sm);
   background: var(--surface-3);
-  animation: pulse 1.6s ease-in-out infinite;
+  animation: var(--anim-pulse);
 }

@@ -79,7 +79,13 @@ const components: Components = {
 const remarkPlugins: Options["remarkPlugins"] = [remarkGfm, [remarkMath, { singleDollarTextMath: false }]];
 const rehypePlugins: Options["rehypePlugins"] = [rehypeKatex, [rehypeHighlight, { detect: false }]];
 
-export const Markdown = memo(function Markdown({ content, streaming = false }: { content: string; streaming?: boolean }) {
+export const Markdown = memo(function Markdown({
+  content,
+  streaming = false,
+}: {
+  content: string;
+  streaming?: boolean;
+}) {
   return (
     <div className={styles.prose} data-streaming={streaming || undefined}>
       <ReactMarkdown remarkPlugins={remarkPlugins} rehypePlugins={rehypePlugins} components={components}>

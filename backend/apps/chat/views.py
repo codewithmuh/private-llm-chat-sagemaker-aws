@@ -6,6 +6,7 @@ from django.db import transaction
 from django.http import StreamingHttpResponse
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers, status
+from rest_framework.negotiation import BaseContentNegotiation
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -34,7 +35,9 @@ class ConversationInput(serializers.Serializer):
 
 class ConversationListView(APIView):
     def get(self, request: Request) -> Response:
-        items = Conversation.objects.filter(user=request.user)
+        # Conversations with no messages yet (a first message the model
+        # refused, an unused OCR hand-off) are not listed: nothing to show.
+        items = Conversation.objects.filter(user=request.user, messages__isnull=False).distinct()
         q = (request.query_params.get("q") or "").strip()
         if q:
             items = items.filter(title__icontains=q)
@@ -102,6 +105,22 @@ class RegenerateInput(serializers.Serializer):
     model = serializers.CharField(max_length=100, required=False, allow_blank=True, allow_null=True)
 
 
+class StreamNegotiation(BaseContentNegotiation):
+    """Ignore the client's Accept header on the streaming endpoints.
+
+    Browsers ask for `Accept: text/event-stream`. DRF would try to find a
+    renderer for that, find none, and answer 406 Not Acceptable. The success
+    response is a raw StreamingHttpResponse (no renderer involved), and errors
+    before the stream starts should be JSON, so always pick the JSON renderer.
+    """
+
+    def select_parser(self, request, parsers):
+        return parsers[0]
+
+    def select_renderer(self, request, renderers, format_suffix=None):
+        return renderers[0], renderers[0].media_type
+
+
 def _sse_response(generator) -> StreamingHttpResponse:
     response = StreamingHttpResponse(generator, content_type="text/event-stream; charset=utf-8")
     response["Cache-Control"] = "no-cache, no-transform"
@@ -119,6 +138,7 @@ def _pick_model(conversation: Conversation, requested: str | None, user):
 
 class SendMessageView(APIView):
     throttle_classes = [ChatThrottle]
+    content_negotiation_class = StreamNegotiation
 
     def post(self, request: Request, pk):
         conversation = _own(request, pk)
@@ -166,6 +186,7 @@ class SendMessageView(APIView):
 
 class RegenerateView(APIView):
     throttle_classes = [ChatThrottle]
+    content_negotiation_class = StreamNegotiation
 
     def post(self, request: Request, pk):
         conversation = _own(request, pk)

@@ -19,7 +19,7 @@
   background: var(--surface-raised);
   border: 1px solid var(--border);
   box-shadow: var(--shadow-md);
-  animation: pop-in var(--normal) var(--ease);
+  animation: var(--anim-pop-in);
 }
 
 @media (max-width: 480px) {

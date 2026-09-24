@@ -96,7 +96,7 @@ Calls go through the AWS API, signed with the api task's IAM role. There's no AP
 leak, and without IAM permission in your account nobody can call your model.
 
 **The GPU controller owns the endpoint, Terraform doesn't.** Terraform creates the model
-and endpoint *configuration* (free). A GPU endpoint costs ~$1–2+/hour just by existing,
+and endpoint *configuration* (free). A GPU endpoint costs ~$1.1–2.6+/hour just by existing,
 so the controller creates it when someone chats and deletes it after `idle_minutes`. If
 Terraform owned it, every `apply` would recreate an endpoint the controller had
 stopped.

@@ -10,6 +10,7 @@ logging in              begin_login -> (maybe) pending MFA -> finish_login
 from __future__ import annotations
 
 import hmac
+import io
 import logging
 import secrets
 import time
@@ -119,8 +120,14 @@ def start_totp_setup(user: User) -> TotpSetup:
         user=user, defaults={"secret": secret, "confirmed": False, "last_used_step": None}
     )
     url = pyotp.TOTP(secret).provisioning_uri(name=user.email, issuer_name=settings.APP_NAME)
-    svg = segno.make(url, error="m").svg_inline(scale=5, border=2, dark="#111", light="#fff")
-    return TotpSetup(secret=secret, otpauth_url=url, qr_svg=svg)
+    # A complete SVG document WITH the xmlns attribute: the frontend shows it
+    # as an <img> (data: URL), and browsers refuse to render an SVG image
+    # without its namespace. (segno's svg_inline() omits it.)
+    buffer = io.BytesIO()
+    segno.make(url, error="m").save(
+        buffer, kind="svg", scale=5, border=2, dark="#111", light="#fff", xmldecl=False, svgns=True
+    )
+    return TotpSetup(secret=secret, otpauth_url=url, qr_svg=buffer.getvalue().decode())
 
 
 def check_totp(device: TOTPDevice, code: str) -> bool:

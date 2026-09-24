@@ -38,7 +38,9 @@ export function MessageList({
 }: MessageListProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
-  const follow = useRef(true); // should new content keep us at the bottom?
+  // Should new content keep us at the bottom? Not for the empty state (its
+  // top would be cut off on small screens); sending a message turns it on.
+  const follow = useRef(messages.length > 0);
   const [atBottom, setAtBottom] = useState(true);
 
   const scrollToBottom = useCallback((smooth = false) => {
@@ -57,7 +59,7 @@ export function MessageList({
 
   // Start at the bottom of the conversation.
   useLayoutEffect(() => {
-    scrollToBottom();
+    if (follow.current) scrollToBottom();
   }, [scrollToBottom]);
 
   // Whenever the content grows and we are following, stay at the bottom.

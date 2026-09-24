@@ -46,13 +46,9 @@ export interface User {
 export type MfaMethod = "totp" | "email" | "recovery";
 
 /** What login/, google/ and verify-email/ answer with. */
-export type LoginResponse =
-  | { status: "ok"; user: User }
-  | { status: "mfa_required"; methods: MfaMethod[] };
+export type LoginResponse = { status: "ok"; user: User } | { status: "mfa_required"; methods: MfaMethod[] };
 
-export type SignupResponse =
-  | { status: "verification_required"; email: string }
-  | { status: "ok"; user: User };
+export type SignupResponse = { status: "verification_required"; email: string } | { status: "ok"; user: User };
 
 export type ModelStatus = "ready" | "starting" | "stopped" | "failed" | "unknown";
 
@@ -137,11 +133,7 @@ export interface TotpSetup {
 /* ---------------------------------------------------------------- stream */
 
 /** Codes an `error` stream event can carry. */
-export type StreamErrorCode =
-  | "provider_error"
-  | "model_starting"
-  | "model_unavailable"
-  | "context_too_long";
+export type StreamErrorCode = "provider_error" | "model_starting" | "model_unavailable" | "context_too_long";
 
 /** Every event the chat stream can send, keyed by its `event:` name. */
 export type ChatStreamEvent =

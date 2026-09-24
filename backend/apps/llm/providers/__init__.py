@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from typing import TYPE_CHECKING
 
 from .base import ChatRequest, Completion, Provider, ProviderError, Usage
@@ -12,6 +13,18 @@ if TYPE_CHECKING:
 __all__ = ["ChatRequest", "Completion", "Provider", "ProviderError", "Usage", "provider_for"]
 
 
+def resolve_secret(value: str) -> str:
+    """`env:NAME` means "read environment variable NAME".
+
+    Lets LLM_MODELS (which ends up in plain text in an ECS task definition)
+    point at a secret that ECS injects from Secrets Manager, instead of
+    containing the key itself.
+    """
+    if value.startswith("env:"):
+        return os.environ.get(value[4:], "")
+    return value
+
+
 def provider_for(model: LLMModel) -> Provider:
     if model.provider == "sagemaker":
         from .sagemaker import SageMakerProvider
@@ -20,7 +33,7 @@ def provider_for(model: LLMModel) -> Provider:
     if model.provider == "openai":
         from .openai_compat import OpenAICompatibleProvider
 
-        return OpenAICompatibleProvider(model.base_url, model.model_id, model.api_key)
+        return OpenAICompatibleProvider(model.base_url, model.model_id, resolve_secret(model.api_key))
     if model.provider == "mock":
         from django.conf import settings
 

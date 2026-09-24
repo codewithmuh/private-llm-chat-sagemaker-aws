@@ -20,7 +20,7 @@
 }
 
 .thinking[data-in-progress] .toggle span {
-  animation: pulse 1.6s ease-in-out infinite;
+  animation: var(--anim-pulse);
 }
 
 .icon {
@@ -41,7 +41,7 @@
   padding: 2px 0 2px 14px;
   border-left: 2px solid var(--border);
   color: var(--text-2);
-  animation: fade-in var(--normal) var(--ease);
+  animation: var(--anim-fade-in);
 }
 
 .body > div {

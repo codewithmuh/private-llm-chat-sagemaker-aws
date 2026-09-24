@@ -64,7 +64,10 @@ export function splitThinking(content: string, streaming = false): SplitAnswer {
   }
 
   return {
-    thinking: thoughts.map((t) => t.trim()).filter(Boolean).join("\n\n"),
+    thinking: thoughts
+      .map((t) => t.trim())
+      .filter(Boolean)
+      .join("\n\n"),
     thinkingOpen: open,
     answer: answer.replace(/^\s+/, ""),
   };

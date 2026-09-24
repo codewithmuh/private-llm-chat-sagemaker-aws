@@ -133,10 +133,12 @@ locals {
   # CONTENT-ADDRESSED NAMES.
   # SageMaker models and endpoint configurations cannot be edited: any change
   # means a new one. With create_before_destroy, Terraform creates the new one
-  # BEFORE deleting the old, so an endpoint the controller is running keeps a
-  # valid configuration the whole time. That only works if the new object gets
-  # a NEW name ("Cannot create already existing model" otherwise), so the name
-  # ends with a short hash of everything that forces a replacement.
+  # BEFORE deleting the old, so LLM_MODELS never names a configuration that
+  # does not exist. (A running endpoint is not affected when the configuration
+  # it was started from is deleted; it keeps running until the controller
+  # re-creates it.) That only works if the new object gets a NEW name
+  # ("Cannot create already existing model" otherwise), so the name ends with a
+  # short hash of everything that forces a replacement.
   #
   # Name limit is 63 characters: "<project>-<env>-<slug>-<8 hex>".
   model_names = {

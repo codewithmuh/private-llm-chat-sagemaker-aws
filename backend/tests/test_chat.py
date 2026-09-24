@@ -102,6 +102,9 @@ def test_conversations_are_private(auth_client: Client, mock_model):
 def test_list_rename_pin_search_delete(auth_client: Client, mock_model):
     a = new_conversation(auth_client, title="Budget 2026")
     b = new_conversation(auth_client, title="Holiday ideas")
+    assert auth_client.get("/api/conversations/").json()["results"] == []  # empty ones are hidden
+    for cid in (b, a):
+        parse_sse(auth_client.post_json(f"/api/conversations/{cid}/messages/", {"content": "hi"}))
     auth_client.patch_json(f"/api/conversations/{a}/", {"pinned": True, "title": "Budget"})
     results = auth_client.get("/api/conversations/").json()["results"]
     assert [c["id"] for c in results] == [a, b]  # pinned first
@@ -203,3 +206,19 @@ def test_stop_is_honoured_before_the_first_token(user, mock_model, monkeypatch):
     answer.refresh_from_db()
     assert answer.status == "stopped"
     assert b"late token" not in b"".join(chunks)
+
+
+def test_browsers_accept_header_is_fine(auth_client: Client, mock_model):
+    """Browsers send Accept: text/event-stream; that must not be a 406."""
+    cid = new_conversation(auth_client)
+    res = auth_client.post_json(
+        f"/api/conversations/{cid}/messages/", {"content": "hi"}, HTTP_ACCEPT="text/event-stream"
+    )
+    assert res.status_code == 200
+    assert dict(parse_sse(res))["done"]["message"]["status"] == "complete"
+    # ...and errors before the stream still come back as JSON.
+    res = auth_client.post_json(f"/api/conversations/{cid}/messages/", {"content": ""}, HTTP_ACCEPT="text/event-stream")
+    assert res.status_code == 400
+    assert res.json()["code"] == "invalid"
+    res = auth_client.post_json(f"/api/conversations/{cid}/regenerate/", {}, HTTP_ACCEPT="text/event-stream")
+    assert res.status_code == 200

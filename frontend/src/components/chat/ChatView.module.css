@@ -55,7 +55,7 @@
   padding: 24px;
   background: color-mix(in srgb, var(--bg) 80%, transparent);
   backdrop-filter: blur(2px);
-  animation: fade-in var(--fast) var(--ease);
+  animation: var(--anim-fade-in-fast);
   pointer-events: none;
 }
 

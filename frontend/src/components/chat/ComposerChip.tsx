@@ -27,7 +27,11 @@ export function ComposerChip({ item, onRemove, onOcr }: ComposerChipProps) {
         : [formatBytes(item.size), pages ? `${pages} page${pages === 1 ? "" : "s"}` : null].filter(Boolean).join(" · ");
 
   return (
-    <li className={styles.chip} data-kind={item.isImage && item.previewUrl ? "image" : "file"} data-error={failed || undefined}>
+    <li
+      className={styles.chip}
+      data-kind={item.isImage && item.previewUrl ? "image" : "file"}
+      data-error={failed || undefined}
+    >
       {item.isImage && item.previewUrl ? (
         <div className={styles.thumb}>
           {/* A local blob: preview or an API URL; next/image can't optimise either. */}
@@ -81,7 +85,13 @@ export function ComposerChip({ item, onRemove, onOcr }: ComposerChipProps) {
         </button>
       )}
 
-      <button type="button" className={styles.remove} onClick={onRemove} aria-label={`Remove ${item.name}`} title="Remove">
+      <button
+        type="button"
+        className={styles.remove}
+        onClick={onRemove}
+        aria-label={`Remove ${item.name}`}
+        title="Remove"
+      >
         <X size={12} strokeWidth={2.6} aria-hidden />
       </button>
 

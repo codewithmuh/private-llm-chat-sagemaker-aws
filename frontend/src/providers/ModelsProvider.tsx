@@ -55,7 +55,9 @@ export function ModelsProvider({ children }: { children: ReactNode }) {
   const wake = useCallback(async (id: string) => {
     const res = await api.post<{ status: Model["status"]; status_detail: string }>(`/api/models/${id}/wake/`);
     setModels((list) =>
-      list.map((m) => (m.id === id ? { ...m, status: res.status ?? "starting", status_detail: res.status_detail ?? "" } : m)),
+      list.map((m) =>
+        m.id === id ? { ...m, status: res.status ?? "starting", status_detail: res.status_detail ?? "" } : m,
+      ),
     );
   }, []);
 

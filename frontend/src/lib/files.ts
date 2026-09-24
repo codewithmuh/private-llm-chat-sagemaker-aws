@@ -19,7 +19,10 @@ export function isImageFile(file: { name: string; type: string }): boolean {
  * Returns a human readable reason the file can't be uploaded, or null if it
  * looks fine. The server checks again; this just saves a pointless upload.
  */
-export function validateFile(file: File, config: Pick<AppConfig, "max_upload_mb" | "accepted_file_types">): string | null {
+export function validateFile(
+  file: File,
+  config: Pick<AppConfig, "max_upload_mb" | "accepted_file_types">,
+): string | null {
   const maxBytes = config.max_upload_mb * 1024 * 1024;
   if (file.size > maxBytes) {
     return `Too large (${formatBytes(file.size)}). The limit is ${config.max_upload_mb} MB.`;
@@ -28,7 +31,9 @@ export function validateFile(file: File, config: Pick<AppConfig, "max_upload_mb"
   if (accepted.length > 0) {
     const ext = extensionOf(file.name);
     // Pasted screenshots are often called "image.png"; also allow by MIME type.
-    const mimeOk = accepted.some((t) => t.includes("/") && (t === file.type || (t.endsWith("/*") && file.type.startsWith(t.slice(0, -1)))));
+    const mimeOk = accepted.some(
+      (t) => t.includes("/") && (t === file.type || (t.endsWith("/*") && file.type.startsWith(t.slice(0, -1)))),
+    );
     if (!accepted.includes(ext) && !mimeOk) {
       return `Unsupported file type${ext ? ` (${ext})` : ""}.`;
     }

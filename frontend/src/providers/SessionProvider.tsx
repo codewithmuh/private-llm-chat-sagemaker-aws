@@ -10,6 +10,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { api, errorMessage, isApiError, setUnauthorizedHandler } from "@/lib/api";
+import { isThemePreference } from "@/lib/theme";
 import type { ThemePreference, User, UserPreferences } from "@/lib/types";
 import { useTheme } from "./ThemeProvider";
 import { useToast } from "@/components/ui/Toast";
@@ -63,7 +64,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         if (cancelled) return;
         setState({ status: "ready", user });
         // The saved preference wins, so the theme follows the user across devices.
-        setTheme(user.preferences.theme);
+        if (isThemePreference(user.preferences?.theme)) setTheme(user.preferences.theme);
       })
       .catch((error: unknown) => {
         if (cancelled) return;
@@ -111,9 +112,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<SessionValue | null>(
     () =>
-      state.status === "ready"
-        ? { user: state.user, setUser, refreshUser, updateMe, setThemeAndSave, logout }
-        : null,
+      state.status === "ready" ? { user: state.user, setUser, refreshUser, updateMe, setThemeAndSave, logout } : null,
     [state, setUser, refreshUser, updateMe, setThemeAndSave, logout],
   );
 

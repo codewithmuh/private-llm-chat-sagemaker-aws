@@ -111,7 +111,15 @@ export function MfaStep({ methods, onSuccess, onCancel }: MfaStepProps) {
             <p className="muted" style={{ fontSize: 14, textAlign: "center" }}>
               Enter the 6-digit code from your authenticator app.
             </p>
-            <OtpInput value={code} onChange={setCode} onComplete={(v) => void verify(v)} autoFocus disabled={busy} invalid={!!error} label="Authenticator code" />
+            <OtpInput
+              value={code}
+              onChange={setCode}
+              onComplete={(v) => void verify(v)}
+              autoFocus
+              disabled={busy}
+              invalid={!!error}
+              label="Authenticator code"
+            />
           </>
         )}
 
@@ -122,7 +130,12 @@ export function MfaStep({ methods, onSuccess, onCancel }: MfaStepProps) {
                 <p className="muted" style={{ fontSize: 14, textAlign: "center" }}>
                   We&apos;ll email a 6-digit code to your account&apos;s address.
                 </p>
-                <button type="button" className="btn btn-primary btn-block" onClick={() => void sendEmailCode()} disabled={sending}>
+                <button
+                  type="button"
+                  className="btn btn-primary btn-block"
+                  onClick={() => void sendEmailCode()}
+                  disabled={sending}
+                >
                   {sending && <span className="spinner" aria-hidden />} Send code
                 </button>
               </>
@@ -131,9 +144,22 @@ export function MfaStep({ methods, onSuccess, onCancel }: MfaStepProps) {
                 <p className="muted" style={{ fontSize: 14, textAlign: "center" }}>
                   Enter the 6-digit code we emailed you.
                 </p>
-                <OtpInput value={code} onChange={setCode} onComplete={(v) => void verify(v)} autoFocus disabled={busy} invalid={!!error} label="Email code" />
+                <OtpInput
+                  value={code}
+                  onChange={setCode}
+                  onComplete={(v) => void verify(v)}
+                  autoFocus
+                  disabled={busy}
+                  invalid={!!error}
+                  label="Email code"
+                />
                 <div className={styles.resend}>
-                  <button type="button" className={styles.textButton} onClick={() => void sendEmailCode()} disabled={cooldown > 0 || sending}>
+                  <button
+                    type="button"
+                    className={styles.textButton}
+                    onClick={() => void sendEmailCode()}
+                    disabled={cooldown > 0 || sending}
+                  >
                     {cooldown > 0 ? `Resend code in ${cooldown}s` : "Resend code"}
                   </button>
                 </div>

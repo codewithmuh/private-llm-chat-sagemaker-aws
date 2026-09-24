@@ -391,6 +391,12 @@ short-lived AWS credentials for one role; no AWS keys are stored in GitHub.
    resource in the stack, IAM roles included). Anyone who can push to `main`
    can then change your AWS infrastructure: protect the branch.
 
+   From then on CI is the deployer. A local `terraform apply` would use the
+   tag in your `infra/terraform/image.auto.tfvars`, which may be older than
+   what CI deployed, and roll the containers back. Delete that file and pass
+   the current tag explicitly if you must apply locally:
+   `terraform apply -var image_tag=$(git rev-parse --short=12 origin/main)`.
+
 The role only trusts runs on `main` of that one repository
 (`github_oidc_subjects`). If you changed `project` or `environment`, set the
 variable `NAME_PREFIX` to `<project>-<environment>`.

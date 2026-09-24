@@ -1,15 +1,23 @@
+/* Top-right on wide screens, top-center on phones: never over the composer. */
 .region {
   position: fixed;
   z-index: 1000;
-  left: 50%;
-  bottom: 24px;
-  transform: translateX(-50%);
+  top: 16px;
+  right: 16px;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-end;
   gap: 8px;
-  width: min(420px, calc(100vw - 32px));
+  width: min(400px, calc(100vw - 32px));
   pointer-events: none;
+}
+
+@media (max-width: 767px) {
+  .region {
+    right: 50%;
+    transform: translateX(50%);
+    align-items: center;
+  }
 }
 
 .toast {
@@ -24,7 +32,18 @@
   border: 1px solid var(--border);
   box-shadow: var(--shadow-lg);
   font-size: 14px;
-  animation: pop-in var(--normal) var(--ease);
+  animation: slide-in var(--normal) var(--ease);
+}
+
+@keyframes slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 .icon {

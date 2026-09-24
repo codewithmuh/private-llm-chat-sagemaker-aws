@@ -41,6 +41,10 @@ CATALOG = Path(__file__).resolve().parent.parent / "models" / "catalog.json"
 # https://aws.github.io/deep-learning-containers/reference/available_images/
 DLC_ACCOUNT = "763104351884"
 DLC_TAG = "0.30-gpu-py312-cu130-ubuntu24.04-sagemaker"
+# The GPU host image. The container above is built for CUDA 13, which needs
+# NVIDIA driver 580+. SageMaker's default host image has an older driver
+# (535), and the endpoint would fail at startup, so we ask for the newer one.
+INFERENCE_AMI = "al2023-ami-sagemaker-inference-gpu-4-1"
 ROLE_NAME = "llmchat-sagemaker-execution"
 
 
@@ -177,6 +181,7 @@ def deploy(args) -> None:
                 "ModelName": model_name,
                 "InstanceType": instance,
                 "InitialInstanceCount": 1,
+                "InferenceAmiVersion": args.inference_ami,
                 # Downloading ~10-20 GB of weights and loading them onto the
                 # GPU takes minutes. The defaults are too short for LLMs.
                 "ContainerStartupHealthCheckTimeoutInSeconds": 1800,
@@ -383,6 +388,7 @@ def main() -> None:
     p.add_argument("--hf-token", help="Hugging Face token, for gated models")
     p.add_argument("--role-arn", help="use this execution role instead of creating one")
     p.add_argument("--image", help="override the container image")
+    p.add_argument("--inference-ami", default=INFERENCE_AMI, help=f"GPU host image (default {INFERENCE_AMI})")
     p.add_argument("--no-wait", action="store_true")
     p.set_defaults(fn=deploy)
 

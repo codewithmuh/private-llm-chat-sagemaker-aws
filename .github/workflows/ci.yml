@@ -74,6 +74,8 @@ jobs:
       - run: terraform fmt -check -recursive infra/terraform
       - run: terraform -chdir=infra/terraform init -backend=false
       - run: terraform -chdir=infra/terraform validate
+      - name: Offline tests (mocked AWS, no credentials)
+        run: terraform -chdir=infra/terraform test
 
   docker:
     name: Docker images build

@@ -126,7 +126,14 @@ function TotpSetupBody({ onCancel, onEnabled }: { onCancel: () => void; onEnable
         <p className={styles.step}>
           <strong>2. Enter the 6-digit code</strong> the app shows.
         </p>
-        <OtpInput value={code} onChange={setCode} onComplete={(v) => void confirm(v)} disabled={busy} invalid={!!error} label="Authenticator code" />
+        <OtpInput
+          value={code}
+          onChange={setCode}
+          onComplete={(v) => void confirm(v)}
+          disabled={busy}
+          invalid={!!error}
+          label="Authenticator code"
+        />
         {error && (
           <div className="alert alert-error" role="alert">
             {error}

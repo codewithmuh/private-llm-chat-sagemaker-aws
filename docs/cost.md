@@ -100,4 +100,4 @@ The trade-off is waiting: after a quiet period, the first message waits for a
 
 And the one rule that matters most: **a forgotten GPU costs about $63 a day.**
 `./scripts/gpu.sh status` shows what is running; a budget alert (see
-[deploy-aws.md](deploy-aws.md#1-prerequisites)) catches the rest.
+[04-deploy-the-full-stack-on-aws.md](04-deploy-the-full-stack-on-aws.md#1-prerequisites)) catches the rest.

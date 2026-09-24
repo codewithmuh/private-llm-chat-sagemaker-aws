@@ -107,7 +107,12 @@ function reducer(state: Threads, action: Action): Threads {
     case "load-ok":
       return {
         ...state,
-        [action.id]: { ...(state[action.id] ?? emptyThread("ready")), status: "ready", loadError: null, messages: action.messages },
+        [action.id]: {
+          ...(state[action.id] ?? emptyThread("ready")),
+          status: "ready",
+          loadError: null,
+          messages: action.messages,
+        },
       };
     case "load-error":
       return { ...state, [action.id]: { ...emptyThread("error"), loadError: action.error } };
@@ -118,7 +123,9 @@ function reducer(state: Threads, action: Action): Threads {
     case "replace":
       return updateThread(state, action.id, (t) => mapMessages(t, action.messageId, () => action.message));
     case "patch":
-      return updateThread(state, action.id, (t) => mapMessages(t, action.messageId, (m) => ({ ...m, ...action.patch })));
+      return updateThread(state, action.id, (t) =>
+        mapMessages(t, action.messageId, (m) => ({ ...m, ...action.patch })),
+      );
     case "append":
       return updateThread(state, action.id, (t) =>
         mapMessages(t, action.messageId, (m) => ({ ...m, content: m.content + action.text })),
@@ -178,7 +185,12 @@ const ActionsContext = createContext<ChatActions | null>(null);
 const StreamingContext = createContext<string[]>([]);
 
 let localCounter = 0;
-function localMessage(role: Message["role"], content: string, attachments: Attachment[], model: string | null): Message {
+function localMessage(
+  role: Message["role"],
+  content: string,
+  attachments: Attachment[],
+  model: string | null,
+): Message {
   localCounter += 1;
   return {
     id: `local-${role}-${localCounter}`,
@@ -297,7 +309,8 @@ export function ChatProvider({ children }: { children: ReactNode }) {
           case "start": {
             started = true;
             const { user_message, assistant_message } = event.data;
-            if (localUser && user_message) dispatch({ type: "replace", id, messageId: localUser.id, message: user_message });
+            if (localUser && user_message)
+              dispatch({ type: "replace", id, messageId: localUser.id, message: user_message });
             dispatch({ type: "replace", id, messageId: assistantId, message: assistant_message });
             assistantId = assistant_message.id;
             entry.assistantId = assistant_message.id;
@@ -319,7 +332,12 @@ export function ChatProvider({ children }: { children: ReactNode }) {
             if (event.data.message) {
               dispatch({ type: "replace", id, messageId: assistantId, message: event.data.message });
             } else {
-              dispatch({ type: "patch", id, messageId: assistantId, patch: { status: "error", error: event.data.error } });
+              dispatch({
+                type: "patch",
+                id,
+                messageId: assistantId,
+                patch: { status: "error", error: event.data.error },
+              });
             }
             if (event.data.code === "model_starting") void refreshModels();
             break;
@@ -371,7 +389,11 @@ export function ChatProvider({ children }: { children: ReactNode }) {
                 dispatch({
                   type: "send-error",
                   id,
-                  error: { message: errorMessage(error), code: isApiError(error) ? error.code : "error", canRetry: false },
+                  error: {
+                    message: errorMessage(error),
+                    code: isApiError(error) ? error.code : "error",
+                    canRetry: false,
+                  },
                 });
               }
               rejectRefused(error);
@@ -424,21 +446,24 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       const thread = threadsRef.current[conversationId];
       const last = thread?.messages[thread.messages.length - 1];
       if (last?.role === "assistant") dispatch({ type: "remove", id: conversationId, messageIds: [last.id] });
-      startStream(conversationId, `/api/conversations/${conversationId}/regenerate/`, model ? { model } : {}, null).catch(
-        (error: unknown) => {
-          dispatch({
-            type: "send-error",
-            id: conversationId,
-            error: {
-              message: errorMessage(error),
-              code: isApiError(error) ? error.code : "error",
-              canRetry: true,
-            },
-          });
-          // We removed the old answer locally; get the server's version back.
-          loadThread(conversationId, true);
-        },
-      );
+      startStream(
+        conversationId,
+        `/api/conversations/${conversationId}/regenerate/`,
+        model ? { model } : {},
+        null,
+      ).catch((error: unknown) => {
+        dispatch({
+          type: "send-error",
+          id: conversationId,
+          error: {
+            message: errorMessage(error),
+            code: isApiError(error) ? error.code : "error",
+            canRetry: true,
+          },
+        });
+        // We removed the old answer locally; get the server's version back.
+        loadThread(conversationId, true);
+      });
     },
     [startStream, loadThread],
   );

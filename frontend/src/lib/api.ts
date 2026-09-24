@@ -17,8 +17,17 @@
  *    once, the first time we need a token and the cookie isn't there yet.
  */
 
-/** Where the API lives. "" means "same origin as this page" (production). */
-export const API_BASE = (process.env.NEXT_PUBLIC_API_URL ?? "").replace(/\/+$/, "");
+/**
+ * Where the API lives.
+ *
+ * - NEXT_PUBLIC_API_URL, when set (it is baked in at build time).
+ * - Otherwise, during `npm run dev`: http://localhost:8000, where Django runs
+ *   locally (`make backend-dev` or `make up`). So a plain `npm run dev` works.
+ * - Otherwise (a production build): "" = the same origin as this page.
+ *   CloudFront sends /api/* to Django, so no URL is needed.
+ */
+const DEV_DEFAULT_API = process.env.NODE_ENV === "development" ? "http://localhost:8000" : "";
+export const API_BASE = (process.env.NEXT_PUBLIC_API_URL ?? DEV_DEFAULT_API).replace(/\/+$/, "");
 
 /** Turn an API path ("/api/…") into a URL the browser can fetch. */
 export function apiUrl(path: string): string {
@@ -143,7 +152,8 @@ export async function toApiError(res: Response): Promise<ApiError> {
         : defaultMessage(res.status);
   const code = typeof obj.code === "string" ? obj.code : `http_${res.status}`;
   const header = Number(res.headers.get("Retry-After"));
-  const retryAfter = typeof obj.retry_after === "number" ? obj.retry_after : Number.isFinite(header) && header > 0 ? header : null;
+  const retryAfter =
+    typeof obj.retry_after === "number" ? obj.retry_after : Number.isFinite(header) && header > 0 ? header : null;
   return new ApiError(res.status, code, message, normaliseFields(obj.fields), retryAfter);
 }
 

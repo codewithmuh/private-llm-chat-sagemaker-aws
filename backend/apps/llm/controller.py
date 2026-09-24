@@ -1,7 +1,7 @@
 """The GPU controller: keeps each SageMaker endpoint in the state its model wants.
 
 A GPU endpoint costs money for every hour it EXISTS, busy or not
-(ml.g6e.xlarge is roughly $1.9-2.4/hour, i.e. ~$1,500/month). Most private
+(ml.g6e.xlarge is about $2.61/hour in us-east-1, i.e. ~$1,900/month). Most private
 deployments are idle most of the day. So Terraform creates the model and the
 endpoint *configuration* (cheap, free when idle), and this controller creates
 and deletes the *endpoint* itself:
@@ -70,6 +70,20 @@ def wants_running(model: LLMModel, now: datetime) -> bool:
     window = timedelta(minutes=model.idle_minutes)
     recent = [t for t in (model.last_used_at, model.wake_requested_at) if t]
     return any(now - t < window for t in recent)
+
+
+def group_wants_running(owner: LLMModel, group: list[LLMModel], now: datetime) -> bool:
+    """For models sharing one endpoint: using ANY of them keeps it running."""
+    if owner.scaling != LLMModel.Scaling.ON_DEMAND:
+        return wants_running(owner, now)
+    window = timedelta(minutes=owner.idle_minutes)
+    return any(now - t < window for m in group for t in (m.last_used_at, m.wake_requested_at) if t)
+
+
+def owner_of(group: list[LLMModel]) -> LLMModel:
+    """The first model (by sort order) whose scaling is not manual."""
+    ordered = sorted(group, key=lambda m: (m.sort, m.name))
+    return next((m for m in ordered if m.scaling != LLMModel.Scaling.MANUAL), ordered[0])
 
 
 def decide(
@@ -154,14 +168,21 @@ class GpuController:
         with transaction.atomic():
             if not _leader_lock():
                 return decisions  # another controller instance is acting this tick
-            models = list(LLMModel.objects.filter(provider=LLMModel.Provider.SAGEMAKER, enabled=True))
+            models = LLMModel.objects.filter(provider=LLMModel.Provider.SAGEMAKER, enabled=True).exclude(
+                endpoint_name=""
+            )
+            # One decision per ENDPOINT: several models may share one (vLLM router).
+            groups: dict[tuple[str, str], list[LLMModel]] = {}
             for model in models:
-                if not model.endpoint_name:
-                    continue
-                decisions[model.slug] = self._tick_model(model, now)
+                groups.setdefault((model.region or settings.AWS_REGION, model.endpoint_name), []).append(model)
+            for group in groups.values():
+                decision = self._tick_group(owner_of(group), group, now)
+                for model in group:
+                    decisions[model.slug] = decision
         return decisions
 
-    def _tick_model(self, model: LLMModel, now: datetime) -> Decision:
+    def _tick_group(self, model: LLMModel, group: list[LLMModel], now: datetime) -> Decision:
+        """`model` is the group's owner: its scaling mode and configuration apply."""
         status, running_config, failure = self.describe(model)
         if status != model.endpoint_status:
             log.info(
@@ -170,11 +191,11 @@ class GpuController:
             )
         decision = decide(
             scaling=model.scaling,
-            want=wants_running(model, now),
+            want=group_wants_running(model, group, now),
             status=status,
             running_config=running_config,
             target_config=model.endpoint_config_name,
-            last_used_at=model.last_used_at,
+            last_used_at=max((m.last_used_at for m in group if m.last_used_at), default=None),
             last_error_at=model.last_error_at,
             now=now,
         )
@@ -184,7 +205,7 @@ class GpuController:
             updates["endpoint_error"] = ""
         if decision.action:
             self._apply(model, decision, failure, updates, now)
-        LLMModel.objects.filter(pk=model.pk).update(**updates)
+        LLMModel.objects.filter(pk__in=[m.pk for m in group]).update(**updates)
         return decision
 
     def _apply(self, model: LLMModel, decision: Decision, failure: str, updates: dict, now: datetime) -> None:

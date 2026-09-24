@@ -19,7 +19,7 @@ def model_list(request: Request) -> Response:
 @api_view(["POST"])
 def model_wake(request: Request, slug: str) -> Response:
     model = get_model(slug)
-    if model.is_sagemaker and model.scaling == LLMModel.Scaling.ON_DEMAND:
+    if model.is_sagemaker and model.endpoint_owner().scaling == LLMModel.Scaling.ON_DEMAND:
         request_wake(model)
     else:
         model.touch()

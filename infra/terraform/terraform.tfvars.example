@@ -5,7 +5,7 @@
 # Everything here is OPTIONAL: every variable has a default, and an empty
 # terraform.tfvars deploys a working app with one model (Qwen3-VL 8B) in
 # us-east-1. Uncomment and change what you need. Full descriptions are in
-# variables.tf; the step-by-step guide is docs/deploy-aws.md.
+# variables.tf; the step-by-step guide is docs/04-deploy-the-full-stack-on-aws.md.
 #
 # Never put AWS access keys here. Terraform uses your AWS CLI profile:
 #   export AWS_PROFILE=my-profile
@@ -17,7 +17,7 @@
 
 # Pick a region where your account has SageMaker GPU quota. Check:
 #   Service Quotas -> Amazon SageMaker -> "ml.g6e.xlarge for endpoint usage"
-# New accounts usually have 0 and must request 1 (docs/deploy-aws.md, step 2).
+# New accounts usually have 0 and must request 1 (docs/04-deploy-the-full-stack-on-aws.md, step 2).
 # aws_region = "us-east-1"
 
 # ============================================================== network =====
@@ -54,7 +54,7 @@
 # Without SES the app runs in "console" mode: emails (and their codes!) are
 # only printed to the api's CloudWatch logs. Set ONE of these for real email.
 # New AWS accounts are in the SES sandbox: you can only send TO verified
-# addresses until you request production access (docs/deploy-aws.md).
+# addresses until you request production access (docs/04-deploy-the-full-stack-on-aws.md).
 
 # ses_from_email = "no-reply@example.com"   # AWS emails this address a link to click
 # ses_domain     = "example.com"            # verify the whole domain (DKIM)
@@ -154,7 +154,7 @@
 # ======================================================= GitHub Actions =====
 # Let .github/workflows/deploy.yml deploy with short-lived credentials (OIDC).
 # After apply, store the github_deploy_role_arn output as the repository secret
-# AWS_DEPLOY_ROLE_ARN (docs/deploy-aws.md, "Deploy from GitHub Actions").
+# AWS_DEPLOY_ROLE_ARN (docs/04-deploy-the-full-stack-on-aws.md, "Deploy from GitHub Actions").
 
 # enable_github_oidc          = true
 # github_repository           = "your-name/private-llm-chat-sagemaker-aws"

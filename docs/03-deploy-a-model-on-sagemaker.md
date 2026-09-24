@@ -3,8 +3,8 @@
 **Goal:** a real open-source LLM on a GPU in **your** AWS account, private to you, and
 the local app chatting with it.
 
-> 💸 **This costs money.** An `ml.g6e.xlarge` is roughly **$2 per hour while it
-> exists**, whether you use it or not. Finish this guide with `make model-stop` and
+> 💸 **This costs money.** An `ml.g6e.xlarge` is about **$2.61 per hour while it
+> exists** (us-east-1), whether you use it or not. Finish this guide with `make model-stop` and
 > check with `make model-presets` / the SageMaker console that nothing is left running.
 
 ## How SageMaker hosting works (3 objects)
@@ -44,10 +44,10 @@ make model-presets
 
 ```
 preset                         instance            $/h  vision gated  model
-qwen3-vl-8b                    ml.g6e.xlarge      2.20  yes           Qwen/Qwen3-VL-8B-Instruct-FP8
-qwen3-vl-4b                    ml.g6.xlarge       1.00  yes           Qwen/Qwen3-VL-4B-Instruct
-qwen3-8b                       ml.g6.xlarge       1.00                Qwen/Qwen3-8B-FP8
-llama-3.1-8b                   ml.g5.xlarge       1.41         yes    meta-llama/Llama-3.1-8B-Instruct
+qwen3-vl-8b                    ml.g6e.xlarge       2.61  yes           Qwen/Qwen3-VL-8B-Instruct-FP8
+qwen3-vl-4b                    ml.g6.xlarge        1.13  yes           Qwen/Qwen3-VL-4B-Instruct
+qwen3-8b                       ml.g6.xlarge        1.13                Qwen/Qwen3-8B-FP8
+llama-3.1-8b                   ml.g5.xlarge        1.41         yes    meta-llama/Llama-3.1-8B-Instruct
 ...
 ```
 
@@ -64,7 +64,7 @@ make model-deploy PRESET=qwen3-vl-8b
 ```
 1/3  Model                  llmchat-qwen3-vl-8b-20260924-101500
 2/3  Endpoint configuration llmchat-qwen3-vl-8b-20260924-101500
-     ml.g6e.xlarge (1x NVIDIA L40S, 48 GB), ~$2.2/hour while running
+     ml.g6e.xlarge (1x NVIDIA L40S, 48 GB), ~$2.61/hour while running
 3/3  Endpoint               llmchat-qwen3-vl-8b
 
 Waiting for the endpoint (weights download + model load: usually 8-15 minutes) ...

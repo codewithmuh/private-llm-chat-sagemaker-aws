@@ -28,7 +28,10 @@ function ResetPasswordForm() {
   if (!uid || !token) {
     return (
       <>
-        <AuthHeading title="This link is incomplete" subtitle="Copy the whole link from the email, or request a new one." />
+        <AuthHeading
+          title="This link is incomplete"
+          subtitle="Copy the whole link from the email, or request a new one."
+        />
         <Link href="/forgot-password" className="btn btn-primary btn-block">
           Request a new link
         </Link>

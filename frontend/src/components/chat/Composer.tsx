@@ -118,7 +118,9 @@ export function Composer({ ref, conversationId, model, streaming, onSend, onStop
     // was saved, so the text and files go back into the box.
     const draftText = text;
     const draftItems = uploads.detach();
-    const attachments = draftItems.filter((i) => i.status === "ready" && i.attachment).map((i) => i.attachment as Attachment);
+    const attachments = draftItems
+      .filter((i) => i.status === "ready" && i.attachment)
+      .map((i) => i.attachment as Attachment);
     setText("");
     setSending(true);
     const ok = await onSend(content, attachments);

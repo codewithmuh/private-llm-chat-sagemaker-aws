@@ -18,5 +18,5 @@
   inset: 0;
   z-index: 790;
   background: var(--overlay);
-  animation: fade-in var(--normal) var(--ease);
+  animation: var(--anim-fade-in);
 }

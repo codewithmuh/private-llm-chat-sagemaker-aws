@@ -77,7 +77,13 @@ export function GeneralTab() {
           <SectionBody>
             <Field label="Name" error={errors.fields.name}>
               {(props) => (
-                <input {...props} className="input" value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" />
+                <input
+                  {...props}
+                  className="input"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  autoComplete="name"
+                />
               )}
             </Field>
             <Field label="Email" hint="Your email address can't be changed here.">
@@ -85,7 +91,12 @@ export function GeneralTab() {
             </Field>
             <Field label="Default model" error={errors.fields.default_model} hint="Used for new chats.">
               {(props) => (
-                <select {...props} className="select" value={defaultModel} onChange={(e) => setDefaultModel(e.target.value)}>
+                <select
+                  {...props}
+                  className="select"
+                  value={defaultModel}
+                  onChange={(e) => setDefaultModel(e.target.value)}
+                >
                   <option value="">Deployment default</option>
                   {models.map((m) => (
                     <option key={m.id} value={m.id}>

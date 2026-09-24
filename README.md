@@ -21,6 +21,8 @@ itself off when nobody is using it.
 [Deploy on AWS](docs/04-deploy-the-full-stack-on-aws.md) ·
 [Docs](docs/)
 
+<img src="docs/images/chat.png" alt="The chat screen: a conversation list on the left, a streamed Markdown answer with a code block on the right" width="900">
+
 </div>
 
 ---
@@ -59,6 +61,18 @@ deployment**, with every step explained:
 | **AWS infrastructure** | Terraform: CloudFront (HTTPS), ALB, ECS Fargate (ARM), RDS PostgreSQL, private S3, SES email, SageMaker, GitHub Actions with OIDC |
 | **Developer experience** | `make up` for the whole stack in Docker, Mailpit to see emails, 90+ backend tests, CI for backend, frontend, Terraform and Docker builds |
 
+## Screenshots
+
+| Dark mode | OCR tool | Two-factor setup |
+|---|---|---|
+| <img src="docs/images/chat-dark.png" alt="Chat in dark mode, with a document and an image attached" width="300"> | <img src="docs/images/ocr.png" alt="OCR tool: an image on the left, the extracted text as Markdown on the right" width="300"> | <img src="docs/images/two-factor.png" alt="Authenticator app setup with a QR code and a 6-digit code field" width="300"> |
+
+| Sign in | Mobile |
+|---|---|
+| <img src="docs/images/login.png" alt="Sign-in page" width="300"> | <img src="docs/images/mobile.png" alt="The chat on a phone-sized screen" width="150"> |
+
+<sub>Screenshots use the built-in mock model, which answers by describing what the backend sent it.</sub>
+
 ## Architecture
 
 ```mermaid
@@ -86,8 +100,8 @@ Each level builds on the previous one. Stop wherever you have what you need.
 |---|---|---|---|---|
 | **1. Local** | The full app on your laptop with a mock model | 5 min | free | [01-quickstart-local](docs/01-quickstart-local.md) |
 | **2. Real model, locally** | Chat with Qwen / Llama running on your machine (Ollama) | 15 min | free | [02-run-a-real-model-locally](docs/02-run-a-real-model-locally.md) |
-| **3. Your GPU on SageMaker** | A private LLM endpoint in your AWS account, used by the local app | 30 min | ~$1–2 per GPU hour | [03-deploy-a-model-on-sagemaker](docs/03-deploy-a-model-on-sagemaker.md) |
-| **4. Everything on AWS** | The app on a public HTTPS URL for your team, GPU on demand | 1–2 h | ~$60/month + GPU hours | [04-deploy-the-full-stack-on-aws](docs/04-deploy-the-full-stack-on-aws.md) |
+| **3. Your GPU on SageMaker** | A private LLM endpoint in your AWS account, used by the local app | 30 min | ~$1.1–2.6 per GPU hour | [03-deploy-a-model-on-sagemaker](docs/03-deploy-a-model-on-sagemaker.md) |
+| **4. Everything on AWS** | The app on a public HTTPS URL for your team, GPU on demand | 1–2 h | ~$80–90/month + GPU hours | [04-deploy-the-full-stack-on-aws](docs/04-deploy-the-full-stack-on-aws.md) |
 | **5. Advanced** | Scale to zero, weights in S3 with no internet, several models per GPU, 70B models, CI/CD | — | — | [05-advanced](docs/05-advanced.md) |
 
 ## Quick start (5 minutes, no GPU)
@@ -137,13 +151,13 @@ Cost breakdown: [docs/cost.md](docs/cost.md).
 
 | Preset | Model | GPU | ~$/hour | Vision/OCR |
 |---|---|---|---|---|
-| `qwen3-vl-8b` ⭐ | Qwen3-VL 8B FP8 | ml.g6e.xlarge (L40S 48 GB) | 2.2 | ✅ |
-| `qwen3-vl-4b` | Qwen3-VL 4B | ml.g6.xlarge (L4 24 GB) | 1.0 | ✅ |
-| `qwen3-8b` | Qwen3 8B FP8 (reasoning) | ml.g6.xlarge | 1.0 | |
-| `llama-3.1-8b` | Llama 3.1 8B Instruct | ml.g5.xlarge (A10G 24 GB) | 1.4 | |
-| `gemma-3-12b` | Gemma 3 12B | ml.g6e.xlarge | 2.2 | ✅ |
-| `qwen3-32b` | Qwen3 32B FP8 | ml.g6e.2xlarge | 2.7 | |
-| `llama-3.3-70b` | Llama 3.3 70B (4 GPUs) | ml.g6e.12xlarge | 13.1 | |
+| `qwen3-vl-8b` ⭐ | Qwen3-VL 8B FP8 | ml.g6e.xlarge (L40S 48 GB) | 2.61 | ✅ |
+| `qwen3-vl-4b` | Qwen3-VL 4B | ml.g6.xlarge (L4 24 GB) | 1.13 | ✅ |
+| `qwen3-8b` | Qwen3 8B FP8 (reasoning) | ml.g6.xlarge | 1.13 | |
+| `llama-3.1-8b` | Llama 3.1 8B Instruct | ml.g5.xlarge (A10G 24 GB) | 1.41 | |
+| `gemma-3-12b` | Gemma 3 12B | ml.g6e.xlarge | 2.61 | ✅ |
+| `qwen3-32b` | Qwen3 32B FP8 | ml.g6e.2xlarge | 2.80 | |
+| `llama-3.3-70b` | Llama 3.3 70B (4 GPUs) | ml.g6e.12xlarge | 13.12 | |
 
 …or any model vLLM supports. How to size the GPU and add your own:
 [docs/models.md](docs/models.md).
@@ -194,9 +208,9 @@ the app only needs an OpenAI-compatible URL (`provider: "openai"`).
 any open model you like with your own settings, and there's less to learn. A Bedrock
 provider is on the [roadmap](docs/roadmap.md) for comparisons.
 
-**How much does it cost?** The app itself is roughly **$60/month** (load balancer,
-small Fargate tasks, a small RDS instance). GPUs are billed per hour while the endpoint
-exists: ~$1–2.2/h for the presets above. With `on_demand` scaling you only pay for
+**How much does it cost?** The app itself is roughly **$80–90/month** (load balancer,
+small Fargate tasks, a small RDS instance, public IPs). GPUs are billed per hour while the endpoint
+exists: ~$1.13–2.61/h for the single-GPU presets above (us-east-1). With `on_demand` scaling you only pay for
 hours actually used. See [docs/cost.md](docs/cost.md).
 
 **Is it production ready?** It's a solid, secure base: auth with 2FA, private

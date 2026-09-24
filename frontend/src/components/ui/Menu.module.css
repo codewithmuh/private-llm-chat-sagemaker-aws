@@ -10,7 +10,7 @@
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
-  animation: pop-in var(--fast) var(--ease);
+  animation: var(--anim-pop-in-fast);
 }
 
 .item {

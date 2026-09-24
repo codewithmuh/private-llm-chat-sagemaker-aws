@@ -38,11 +38,20 @@ function CopyButton({ text }: { text: string }) {
 
 // memo: while an answer streams only that one message re-renders, not the
 // whole conversation (each message object keeps its identity in the store).
-export const MessageItem = memo(function MessageItem({ message, isLast, busy, modelName, onRegenerate }: MessageItemProps) {
+export const MessageItem = memo(function MessageItem({
+  message,
+  isLast,
+  busy,
+  modelName,
+  onRegenerate,
+}: MessageItemProps) {
   const streaming = message.status === "streaming";
   // Reasoning models: split "<think>…</think>" from the answer.
   const { thinking, thinkingOpen, answer } = useMemo(
-    () => (message.role === "assistant" ? splitThinking(message.content, streaming) : { thinking: null, thinkingOpen: false, answer: message.content }),
+    () =>
+      message.role === "assistant"
+        ? splitThinking(message.content, streaming)
+        : { thinking: null, thinkingOpen: false, answer: message.content },
     [message.role, message.content, streaming],
   );
 

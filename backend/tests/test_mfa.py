@@ -19,6 +19,7 @@ def enable_totp(client: Client) -> tuple[str, list[str]]:
     setup = client.post_json("/api/auth/mfa/totp/setup/").json()
     assert setup["otpauth_url"].startswith("otpauth://totp/")
     assert setup["qr_svg"].startswith("<svg")
+    assert 'xmlns="http://www.w3.org/2000/svg"' in setup["qr_svg"]  # needed to render as an <img>
     res = client.post_json("/api/auth/mfa/totp/confirm/", {"code": pyotp.TOTP(setup["secret"]).now()})
     assert res.status_code == 200, res.content
     return setup["secret"], res.json()["recovery_codes"]

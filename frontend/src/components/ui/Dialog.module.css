@@ -22,11 +22,11 @@
 
 .dialog::backdrop {
   background: var(--overlay);
-  animation: fade-in var(--normal) var(--ease);
+  animation: var(--anim-fade-in);
 }
 
 .dialog[open] .panel {
-  animation: pop-in var(--normal) var(--ease);
+  animation: var(--anim-pop-in);
 }
 
 .panel {

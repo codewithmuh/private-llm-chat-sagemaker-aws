@@ -143,3 +143,49 @@ def test_quota_error_is_recorded():
     m.refresh_from_db()
     assert "ResourceLimitExceeded" in m.endpoint_error
     assert m.last_error_at is not None
+
+
+@pytest.mark.django_db
+def test_models_sharing_an_endpoint_are_one_group(settings):
+    """vLLM router: the owner (on_demand) starts the endpoint when ANY sibling is used."""
+    owner = model(slug="vision", name="Vision", endpoint_name="shared", sort=10, last_used_at=None)
+    sibling = model(
+        slug="text", name="Text", endpoint_name="shared", scaling="manual", sort=20, endpoint_config_name=""
+    )
+    owner.save()
+    sibling.save()
+    sibling.touch()  # someone chats with the manual sibling only
+    fake = FakeSageMaker(None)
+    decisions = GpuController(sagemaker_client_factory=lambda region: fake).tick()
+    assert decisions["vision"].action == decisions["text"].action == "create"
+    assert fake.created == [("shared", "cfg")]
+    sibling.refresh_from_db()
+    assert sibling.endpoint_status == "Creating"  # status is shared too
+    assert sibling.endpoint_owner().pk == owner.pk
+
+
+@pytest.mark.django_db
+def test_manual_sibling_follows_the_owner_scaling(auth_client):
+    owner = model(
+        slug="vision",
+        name="Vision",
+        endpoint_name="shared",
+        endpoint_status="NotFound",
+        status_checked_at=timezone.now(),
+    )
+    sibling = model(
+        slug="text",
+        name="Text",
+        endpoint_name="shared",
+        scaling="manual",
+        endpoint_status="NotFound",
+        status_checked_at=timezone.now(),
+        is_default=True,
+    )
+    owner.save()
+    sibling.save()
+    cid = auth_client.post_json("/api/conversations/", {"model": "text"}).json()["id"]
+    res = auth_client.post_json(f"/api/conversations/{cid}/messages/", {"content": "hi"})
+    assert res.json()["code"] == "model_starting"  # not "model_unavailable"
+    sibling.refresh_from_db()
+    assert sibling.wake_requested_at is not None

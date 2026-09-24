@@ -77,7 +77,9 @@ def ensure_ready(model: LLMModel) -> None:
     status = model.endpoint_status
     if status == "InService" or status in ("", UNKNOWN):
         return  # ready, or unknown: just try
-    if model.scaling == LLMModel.Scaling.MANUAL:
+    # Models sharing an endpoint follow the scaling mode of its owner.
+    scaling = model.endpoint_owner().scaling
+    if scaling == LLMModel.Scaling.MANUAL:
         if status == NOT_FOUND:
             raise ApiError(
                 "This model's SageMaker endpoint does not exist. Deploy it first (see docs).",
@@ -85,9 +87,9 @@ def ensure_ready(model: LLMModel) -> None:
                 status_code=503,
             )
         return
-    if model.scaling == LLMModel.Scaling.OFF:
+    if scaling == LLMModel.Scaling.OFF:
         raise ApiError("This model is switched off by an administrator.", code="model_unavailable", status_code=503)
-    if model.scaling == LLMModel.Scaling.ON_DEMAND:
+    if scaling == LLMModel.Scaling.ON_DEMAND:
         request_wake(model)
     _, detail = model.public_status()
     raise ApiError(

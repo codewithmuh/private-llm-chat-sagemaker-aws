@@ -7,16 +7,16 @@ defined in [`ml/models/catalog.json`](../ml/models/catalog.json).
 
 | Preset | Model | Instance (GPU) | ~$/hour | Vision / OCR | Notes |
 |---|---|---|---|---|---|
-| `qwen3-vl-8b` ⭐ | Qwen/Qwen3-VL-8B-Instruct-FP8 | ml.g6e.xlarge (L40S 48 GB) | 2.2 | ✅ | The default. Chat, photos, screenshots, scans, charts |
-| `qwen3-vl-4b` | Qwen/Qwen3-VL-4B-Instruct | ml.g6.xlarge (L4 24 GB) | 1.0 | ✅ | Cheapest vision model |
-| `qwen3-8b` | Qwen/Qwen3-8B-FP8 | ml.g6.xlarge (L4 24 GB) | 1.0 | | Text; shows its reasoning |
+| `qwen3-vl-8b` ⭐ | Qwen/Qwen3-VL-8B-Instruct-FP8 | ml.g6e.xlarge (L40S 48 GB) | 2.61 | ✅ | The default. Chat, photos, screenshots, scans, charts |
+| `qwen3-vl-4b` | Qwen/Qwen3-VL-4B-Instruct | ml.g6.xlarge (L4 24 GB) | 1.13 | ✅ | Cheapest vision model |
+| `qwen3-8b` | Qwen/Qwen3-8B-FP8 | ml.g6.xlarge (L4 24 GB) | 1.13 | | Text; shows its reasoning |
 | `llama-3.1-8b` | meta-llama/Llama-3.1-8B-Instruct | ml.g5.xlarge (A10G 24 GB) | 1.41 | | Gated |
 | `deepseek-r1-distill-qwen-7b` | deepseek-ai/DeepSeek-R1-Distill-Qwen-7B | ml.g5.xlarge (A10G 24 GB) | 1.41 | | Reasoning |
-| `gemma-3-12b` | google/gemma-3-12b-it | ml.g6e.xlarge (L40S 48 GB) | 2.2 | ✅ | Gated |
-| `qwen3-32b` | Qwen/Qwen3-32B-FP8 | ml.g6e.2xlarge (L40S 48 GB) | 2.7 | | Much stronger text model |
-| `llama-3.3-70b` | meta-llama/Llama-3.3-70B-Instruct | ml.g6e.12xlarge (4× L40S) | 13.1 | | 4-GPU tensor parallelism. Gated. Expensive |
+| `gemma-3-12b` | google/gemma-3-12b-it | ml.g6e.xlarge (L40S 48 GB) | 2.61 | ✅ | Gated |
+| `qwen3-32b` | Qwen/Qwen3-32B-FP8 | ml.g6e.2xlarge (L40S 48 GB) | 2.80 | | Much stronger text model |
+| `llama-3.3-70b` | meta-llama/Llama-3.3-70B-Instruct | ml.g6e.12xlarge (4× L40S) | 13.12 | | 4-GPU tensor parallelism. Gated. Expensive |
 
-Prices are approximate us-east-1 on-demand rates; check the
+Prices are us-east-1 on-demand SageMaker hosting rates (AWS Price List API, September 2026); check the
 [SageMaker pricing page](https://aws.amazon.com/sagemaker/pricing/) for your region.
 "Gated" means you must accept the licence on Hugging Face and deploy with a token.
 

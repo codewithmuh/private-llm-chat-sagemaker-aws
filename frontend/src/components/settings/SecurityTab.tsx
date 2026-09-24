@@ -91,7 +91,11 @@ export function SecurityTab() {
         <SettingRow
           icon={Link2}
           title="Google"
-          status={<span className={`badge ${user.google_linked ? styles.on : ""}`}>{user.google_linked ? "Linked" : "Not linked"}</span>}
+          status={
+            <span className={`badge ${user.google_linked ? styles.on : ""}`}>
+              {user.google_linked ? "Linked" : "Not linked"}
+            </span>
+          }
           description={
             user.google_linked
               ? "You can sign in with Google."
