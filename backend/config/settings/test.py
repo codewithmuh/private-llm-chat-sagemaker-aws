@@ -20,6 +20,7 @@ PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
 
 EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
 MEDIA_ROOT = Path(tempfile.mkdtemp(prefix="llmchat-test-media-"))  # noqa: F405
+STATIC_ROOT = Path(tempfile.mkdtemp(prefix="llmchat-test-static-"))  # noqa: F405
 STORAGES = {  # noqa: F405
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
     "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
@@ -30,6 +31,7 @@ EMAIL_VERIFICATION = "mandatory"
 OCR_ENGINE = "llm"
 TITLE_GENERATION = True
 LLM_MODELS = "[]"
+MOCK_LLM_DELAY = 0.0
 
 # Throttling is tested explicitly where it matters; elsewhere it would make
 # tests order-dependent.

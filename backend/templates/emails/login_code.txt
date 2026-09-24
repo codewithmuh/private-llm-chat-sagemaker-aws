@@ -1,0 +1,9 @@
+{% autoescape off %}Your {{ app_name }} sign-in code: {{ code }}
+Hi{% if name %} {{ name }}{% endif %},
+
+Someone (hopefully you) is signing in to {{ app_name }}. Your code is:
+
+    {{ code }}
+
+It expires in {{ minutes }} minutes. If this wasn't you, change your password: your password was entered correctly.
+{% endautoescape %}

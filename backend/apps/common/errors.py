@@ -94,14 +94,12 @@ def exception_handler(exc, context):
     if isinstance(exc, exceptions.ValidationError):
         detail = exc.detail
         if isinstance(detail, dict):
-            fields = {
-                name: _first_message(value)
-                for name, value in detail.items()
-                if name != "non_field_errors"
-            }
+            fields = {name: _first_message(value) for name, value in detail.items() if name != "non_field_errors"}
             non_field = detail.get("non_field_errors")
-            message = _first_message(non_field) if non_field else (
-                _first_message(detail) if not fields else "Please check the highlighted fields."
+            message = (
+                _first_message(non_field)
+                if non_field
+                else (_first_message(detail) if not fields else "Please check the highlighted fields.")
             )
             body = {"error": message, "code": _first_code(detail) if non_field else "invalid"}
             if fields:

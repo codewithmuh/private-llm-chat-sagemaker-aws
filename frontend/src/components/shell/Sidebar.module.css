@@ -1,0 +1,145 @@
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  width: var(--sidebar-width);
+  flex-shrink: 0;
+  height: 100dvh;
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--border);
+  transition: margin-left var(--normal) var(--ease);
+}
+
+/* Desktop: collapsed = slid out to the left. */
+.sidebar[data-hidden] {
+  margin-left: calc(-1 * var(--sidebar-width));
+}
+
+/* Mobile: an overlay drawer. */
+@media (max-width: 767px) {
+  .sidebar {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 800;
+    width: min(300px, 86vw);
+    margin-left: 0;
+    border-right: none;
+    box-shadow: var(--shadow-lg);
+    transition: transform var(--normal) var(--ease);
+  }
+  .sidebar[data-hidden] {
+    margin-left: 0;
+    transform: translateX(-100%);
+    box-shadow: none;
+  }
+}
+
+.top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  height: var(--header-height);
+  padding: 0 10px 0 14px;
+  flex-shrink: 0;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 4px;
+  border-radius: var(--radius);
+}
+
+.brandName {
+  font-weight: 600;
+  font-size: 15px;
+  letter-spacing: -0.01em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 4px 8px 8px;
+}
+
+.action {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 38px;
+  padding: 0 10px;
+  border-radius: var(--radius);
+  font-size: 14px;
+  color: var(--text);
+  text-align: left;
+  width: 100%;
+}
+
+.action:hover {
+  background: var(--surface-3);
+}
+
+.action span {
+  flex: 1;
+}
+
+.kbd {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  color: var(--text-3);
+  opacity: 0;
+  transition: opacity var(--fast);
+}
+
+.action:hover .kbd,
+.action:focus-visible .kbd {
+  opacity: 1;
+}
+
+.search {
+  position: relative;
+  margin: 0 10px 8px;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 11px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-3);
+  pointer-events: none;
+}
+
+.searchInput {
+  width: 100%;
+  height: 36px;
+  padding: 0 10px 0 34px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--bg);
+  font-size: 14px;
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: var(--focus-ring);
+}
+
+.searchInput::placeholder {
+  color: var(--text-3);
+}
+
+.bottom {
+  flex-shrink: 0;
+  padding: 8px;
+  border-top: 1px solid var(--border);
+}

@@ -1,0 +1,9 @@
+{% autoescape off %}Your {{ app_name }} verification code: {{ code }}
+Hi{% if name %} {{ name }}{% endif %},
+
+Your code to verify your email address is:
+
+    {{ code }}
+
+It expires in {{ minutes }} minutes. If you didn't sign up for {{ app_name }}, you can ignore this email.
+{% endautoescape %}

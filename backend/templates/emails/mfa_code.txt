@@ -1,0 +1,9 @@
+{% autoescape off %}Your {{ app_name }} security code: {{ code }}
+Hi{% if name %} {{ name }}{% endif %},
+
+Your code to change your two-factor settings is:
+
+    {{ code }}
+
+It expires in {{ minutes }} minutes. If you didn't ask for this, someone may be using your account: change your password.
+{% endautoescape %}

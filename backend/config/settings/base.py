@@ -250,6 +250,8 @@ LLM_TIMEOUT_SECONDS = env_int("LLM_TIMEOUT_SECONDS", 300)
 OCR_ENGINE = env("OCR_ENGINE", "auto")
 TITLE_GENERATION = env_bool("TITLE_GENERATION", True)
 GPU_CONTROLLER_INTERVAL = env_int("GPU_CONTROLLER_INTERVAL", 30)
+# Seconds between words for the in-process mock model (0 in tests).
+MOCK_LLM_DELAY = float(env("MOCK_LLM_DELAY", "0.02"))
 
 # --------------------------------------------------------------------- API --
 

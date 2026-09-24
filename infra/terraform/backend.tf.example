@@ -1,0 +1,32 @@
+# OPTIONAL: keep the Terraform state in S3 instead of a local file.
+#
+# When do you need this?
+#   - You want the GitHub Actions workflow (.github/workflows/deploy.yml) to run
+#     `terraform apply` for you. CI machines are thrown away after every run,
+#     so they must read and write the state somewhere shared.
+#   - More than one person (or laptop) manages the same stack.
+#
+# How to switch:
+#   1. Create a state bucket once:      ./scripts/bootstrap-state.sh
+#   2. Copy this file:                  cp backend.tf.example backend.tf
+#   3. Move your existing local state:
+#        terraform init -migrate-state \
+#          -backend-config="bucket=<your-state-bucket>" \
+#          -backend-config="region=<bucket-region>"
+#
+# backend.tf is gitignored (infra/terraform/.gitignore): the bucket name holds
+# your AWS account id, which you may not want in a public fork.
+#
+# `use_lockfile = true` makes Terraform write a small .tflock object next to the
+# state while it runs, so two applies can never write the state at the same
+# time. It replaces the old DynamoDB lock table and needs Terraform >= 1.10.
+
+terraform {
+  backend "s3" {
+    # bucket = "llmchat-tfstate-<account-id>-<region>"   # or -backend-config="bucket=..."
+    # region = "us-east-1"                               # or -backend-config="region=..."
+    key          = "llmchat/dev/terraform.tfstate"
+    encrypt      = true
+    use_lockfile = true
+  }
+}

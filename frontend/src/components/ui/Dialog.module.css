@@ -1,0 +1,75 @@
+.dialog {
+  margin: auto;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  width: calc(100vw - 32px);
+  max-width: 480px;
+  max-height: calc(100dvh - 32px);
+  overflow: visible;
+}
+
+.dialog[data-size="sm"] {
+  max-width: 400px;
+}
+.dialog[data-size="lg"] {
+  max-width: 640px;
+}
+.dialog[data-size="full"] {
+  max-width: min(1100px, calc(100vw - 32px));
+}
+
+.dialog::backdrop {
+  background: var(--overlay);
+  animation: fade-in var(--normal) var(--ease);
+}
+
+.dialog[open] .panel {
+  animation: pop-in var(--normal) var(--ease);
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100dvh - 32px);
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 20px 0 22px;
+}
+
+.title {
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.description {
+  padding: 6px 22px 0;
+  color: var(--text-2);
+  font-size: 14px;
+}
+
+.body {
+  padding: 16px 22px 4px;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 16px 22px 20px;
+}

@@ -1,0 +1,10 @@
+# Written by scripts/deploy.sh: remembers the image tag that is deployed, so a
+# plain `terraform apply` later does not roll the containers back.
+image.auto.tfvars
+
+# Your copy of backend.tf.example. It names your state bucket, which contains
+# your AWS account id.
+backend.tf
+
+# CI writes the tfvars it decodes from a secret here; never commit real values.
+terraform.tfvars

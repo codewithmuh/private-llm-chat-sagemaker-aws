@@ -1,0 +1,94 @@
+.item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  border-radius: var(--radius);
+}
+
+.item:hover,
+.item[data-menu-open] {
+  background: var(--surface-3);
+}
+
+.item[data-active] {
+  background: var(--surface-3);
+}
+
+.link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+  height: 36px;
+  padding: 0 34px 0 10px;
+  border-radius: var(--radius);
+  font-size: 14px;
+  color: var(--text);
+}
+
+.title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  /* fade the end of long titles instead of an ellipsis */
+  mask-image: linear-gradient(to right, #000 85%, transparent);
+}
+
+.pin {
+  flex-shrink: 0;
+  color: var(--text-3);
+}
+
+.spinner {
+  width: 12px;
+  height: 12px;
+  border-width: 1.5px;
+  color: var(--accent);
+}
+
+.more {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  color: var(--text-2);
+  opacity: 0;
+}
+
+.more:hover {
+  color: var(--text);
+  background: var(--surface-2);
+}
+
+/* Show the "…" button on hover, focus, when active, and always on touch screens. */
+.item:hover .more,
+.item[data-active] .more,
+.item[data-menu-open] .more,
+.more:focus-visible {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .more {
+    opacity: 1;
+  }
+}
+
+.rename {
+  flex: 1;
+  height: 36px;
+  padding: 0 10px;
+  border-radius: var(--radius);
+  border: 1px solid var(--accent);
+  background: var(--bg);
+  font-size: 14px;
+  box-shadow: var(--focus-ring);
+  outline: none;
+}

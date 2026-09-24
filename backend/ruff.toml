@@ -1,0 +1,20 @@
+line-length = 120
+target-version = "py312"
+extend-exclude = ["*/migrations/*"]
+
+[lint]
+select = ["E", "F", "I", "UP", "B", "S", "C4", "DJ"]
+ignore = [
+  "S101",  # assert is fine in tests
+  "S105",  # "hardcoded password" false positives on constants
+  "S106",
+  "E501",  # the formatter handles length; long comments are fine
+  "DJ001", # CharField(null=True) is intended for google_sub (unique + optional)
+]
+
+[lint.per-file-ignores]
+"tests/*" = ["S"]
+"config/settings/*" = ["F403", "F405"]
+
+[format]
+quote-style = "double"
