@@ -1,12 +1,21 @@
 # Web app (Next.js)
 
-The ChatGPT-like interface for Private LLM Chat. It is a **client-side app**:
-every page renders in the browser and talks to the Django API with `fetch`.
-The Next.js server only serves the pages (and `/healthz`).
+Three parts:
+
+| Route | What | How it renders |
+|---|---|---|
+| `/` | Product landing page (Log in / Get started at the top) | Static HTML at build time; the model table comes from `../ml/models/catalog.json` |
+| `/docs`, `/docs/<file>` | The repository's `../docs/*.md`, one page per file (`README.md` is `/docs`) | Static HTML at build time; mermaid diagrams are drawn in the browser |
+| `/chat`, `/c/<id>`, `/settings`, `/ocr`, `/login`… | The ChatGPT-like app | **Client-side**: pages run in the browser and call the Django API with `fetch` |
+
+The Next.js server only serves the pages (and `/healthz`). Because the landing
+page and the docs read `../docs` and `../ml/models` while building, **build from
+a full checkout** (and the Docker image from the repository root, see below).
 
 - Next.js 16 (App Router, `output: "standalone"`), React 19, TypeScript (strict)
 - Plain CSS: design tokens in `src/app/globals.css` + one CSS Module per component. No Tailwind, no UI kit.
 - `lucide-react` icons; `react-markdown` + `remark-gfm` + `remark-math` + `rehype-katex` + `rehype-highlight` for answers
+- Docs: `unified` + `remark-parse` + `remark-rehype` + `rehype-highlight` + `hast-util-to-jsx-runtime` at build time, `mermaid` (loaded only on docs pages that have a diagram)
 
 The API it talks to is documented in [`docs/api.md`](../docs/api.md).
 
@@ -40,14 +49,19 @@ open) comes from `GET /api/config/` at runtime, so one image works everywhere.
 
 ### Docker
 
+The build context is the **repository root** (the docs and the model table are
+built from `docs/` and `ml/models/`; the root `.dockerignore` sends only
+`frontend/`, `docs/` and `ml/models/`):
+
 ```bash
-docker build -t llmchat-web frontend                         # same-origin API
-docker build --build-arg NEXT_PUBLIC_API_URL=http://localhost:8000 -t llmchat-web frontend
-docker run -p 3000:3000 llmchat-web                          # health check: GET /healthz
+docker build -f frontend/Dockerfile -t llmchat-web .                    # same-origin API
+docker build -f frontend/Dockerfile --build-arg NEXT_PUBLIC_API_URL=http://localhost:8000 -t llmchat-web .
+docker run -p 3000:3000 llmchat-web                                    # health check: GET /healthz
 ```
 
 Multi-stage (deps → build → runner) on `node:24-alpine`, runs as the non-root
-`node` user, builds for `linux/amd64` and `linux/arm64`.
+`node` user, builds for `linux/amd64` and `linux/arm64`. Nothing from `docs/`
+is needed at runtime: those pages are prerendered.
 
 ## Folder structure
 
@@ -60,9 +74,12 @@ src/
     healthz/route.ts          GET /healthz -> "ok" (container health check)
     (auth)/                   signed-out pages, centered card layout
       login/ signup/ verify-email/ forgot-password/ reset-password/
+    (marketing)/              public pages: header + footer, no auth guard
+      page.tsx                "/"  the product landing page
+      docs/                   "/docs" and "/docs/[slug]" (static, one per docs/*.md)
     (app)/                    signed-in pages
       layout.tsx              auth guard + providers + sidebar shell
-      page.tsx                "/"  new chat
+      chat/page.tsx           "/chat"  new chat
       c/[id]/page.tsx         "/c/<id>"  a conversation
       settings/page.tsx       General | Security | Data
       ocr/page.tsx            OCR tool
@@ -73,6 +90,9 @@ src/
     auth/                     AuthShell, GoogleButton, MfaStep, PasswordStrength
     settings/                 the three settings tabs + 2FA dialogs
     ocr/                      OcrTool
+    landing/                  the landing page sections, SiteHeader, SiteFooter
+    docs/                     docs navigation, table of contents, code blocks, Mermaid
+  content/                    build-time readers: docs/*.md (docs.ts, render-markdown.tsx), catalog.json
   providers/                  React context: config, theme, session, models, conversations, chat store
   hooks/                      small reusable hooks (useCooldown, useCopy, useMediaQuery…)
   lib/
@@ -127,7 +147,7 @@ blank line between events, `:` lines are keep-alives).
 
 **New chat → `/c/<id>` without losing the stream.** The chat store lives in
 `app/(app)/layout.tsx`, which stays mounted when the URL changes. On the first
-message from `/` we create the conversation, start the stream, then
+message from `/chat` we create the conversation, start the stream, then
 `router.replace("/c/<id>")`. The new page reads the same store, so the answer
 keeps streaming.
 
