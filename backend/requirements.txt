@@ -16,7 +16,7 @@ httpx==0.28.1
 # Accounts: authenticator-app codes, QR codes, "Sign in with Google"
 pyotp==2.10.0
 segno==1.6.6
-google-auth==2.58.0
+google-auth==2.58.1
 requests==2.34.2
 
 # Reading what people upload: PDFs, Word files, images, OCR fallback
