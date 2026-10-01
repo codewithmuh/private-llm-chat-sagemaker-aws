@@ -7,7 +7,7 @@ gunicorn==26.2.0
 psycopg[binary]==3.3.6
 
 # AWS (S3 uploads, SES email, SageMaker runtime + GPU controller)
-boto3==1.43.101
+boto3==1.43.104
 django-storages[s3]==1.14.6
 
 # Talking to OpenAI-compatible model servers (vLLM, Ollama, LM Studio, ...)
