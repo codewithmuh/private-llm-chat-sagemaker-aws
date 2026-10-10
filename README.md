@@ -17,6 +17,7 @@ itself off when nobody is using it.
 
 [Quick start](#quick-start-no-gpu) ·
 [Learning path](#choose-your-path) ·
+[Concepts](docs/concepts.md) ·
 [Architecture](docs/architecture.md) ·
 [Deploy on AWS](docs/04-deploy-the-full-stack-on-aws.md) ·
 [Docs](docs/)
@@ -105,6 +106,7 @@ Each level builds on the previous one. Stop wherever you have what you need.
 | **2. More models, faster** | Switch models, and run them on your Mac's or PC's GPU with Docker Model Runner | 10 min | free | [02-run-a-real-model-locally](docs/02-run-a-real-model-locally.md) |
 | **3. Your GPU on SageMaker** | A private LLM endpoint in your AWS account, used by the local app | 30 min | ~$1.1–2.6 per GPU hour | [03-deploy-a-model-on-sagemaker](docs/03-deploy-a-model-on-sagemaker.md) |
 | **4. Everything on AWS** | The app on a public HTTPS URL for your team, GPU on demand | 1–2 h | ~$80–90/month + GPU hours | [04-deploy-the-full-stack-on-aws](docs/04-deploy-the-full-stack-on-aws.md) |
+| **Concepts** | How LLMs work (tokens, sizes, GPU memory, quantization, speed, RAG) and how every part of this app works | read anytime | free | [concepts](docs/concepts.md) |
 | **5. Advanced** | Scale to zero, weights in S3 with no internet, several models per GPU, 70B models, CI/CD | — | — | [05-advanced](docs/05-advanced.md) |
 
 ## Quick start (no GPU)

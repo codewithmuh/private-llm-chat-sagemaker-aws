@@ -98,7 +98,7 @@ sequenceDiagram
     S-->>A: top results (title, url, snippet)
     A->>W: open the top 3 pages, keep their main text (public IPs only)
     A-->>B: event: sources [1] [2] [3]...
-    A->>M: prompt with <search_results> [1]...[5] + "cite them"
+    A->>M: prompt with the numbered results [1]...[5] + "cite them"
     M-->>B: the answer, citing [1], [2] (event: delta...)
 ```
 

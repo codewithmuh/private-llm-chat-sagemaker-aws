@@ -39,6 +39,7 @@ const GUIDES = [
   "05-advanced",
 ];
 const REFERENCE = [
+  "concepts",
   "architecture",
   "models",
   "authentication",
@@ -56,6 +57,7 @@ const LABELS: Record<string, string> = {
   "03-deploy-a-model-on-sagemaker": "3. Your GPU on SageMaker",
   "04-deploy-the-full-stack-on-aws": "4. Everything on AWS",
   "05-advanced": "5. Advanced topics",
+  concepts: "Concepts (LLMs explained)",
   architecture: "Architecture",
   models: "Models",
   authentication: "Authentication",

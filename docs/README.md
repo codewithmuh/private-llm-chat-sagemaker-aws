@@ -10,6 +10,9 @@
 
 ## Reference
 
+- [Concepts](concepts.md): how LLMs work (tokens, model sizes, memory, quantization,
+  speed, sampling, RAG) and how every part of this app works, end to end. Includes a
+  pitch, the design trade-offs and common questions with answers
 - [Architecture](architecture.md): components, request flow, design decisions
 - [Models](models.md): presets, GPU sizing, adding any Hugging Face model
 - [Authentication](authentication.md): email, Google sign-in, 2FA, admins

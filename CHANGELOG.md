@@ -38,6 +38,9 @@ All notable changes to this project are documented here. The format follows
   transcribes it in a container next to the api, locally and on AWS
   (`enable_speech_to_text`), so voice never leaves your infrastructure. The api
   task's default memory is now 2 GiB (api + SearXNG + Whisper).
+- `docs/concepts.md`: every concept behind the project in one page, from tokens,
+  model sizes, GPU memory and quantization to RAG, tool calling, Whisper, SageMaker
+  and the app's architecture, with a pitch, design trade-offs and common questions.
 - `RUN_LOCALLY.md`: a step-by-step guide for beginners, from installing Docker to chatting.
 
 ### Removed
