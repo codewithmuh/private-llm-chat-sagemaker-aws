@@ -55,3 +55,6 @@ models/
 .vscode/*
 !.vscode/extensions.json
 *.swp
+
+# Written by `make up` / `make model` (scripts/up.sh) for the models you downloaded.
+config/models.local.json

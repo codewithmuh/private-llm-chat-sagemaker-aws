@@ -2,8 +2,8 @@
 
 ## Guides: follow them in order
 
-1. [Run the app on your laptop](01-quickstart-local.md): 5 minutes, no GPU, mock model
-2. [Run a real model locally](02-run-a-real-model-locally.md): Ollama, free
+1. [Run the app on your laptop](01-quickstart-local.md): no GPU, a real open-source model you pick
+2. [Real models locally](02-run-a-real-model-locally.md): switch models, make answers faster with your GPU
 3. [Deploy a model to your own SageMaker GPU](03-deploy-a-model-on-sagemaker.md): the local app uses it
 4. [Deploy the whole app on AWS](04-deploy-the-full-stack-on-aws.md): Terraform, HTTPS URL, GPU on demand
 5. [Advanced topics](05-advanced.md): scale to zero, weights in S3, no-internet VPC, several models per GPU, big models, CI/CD

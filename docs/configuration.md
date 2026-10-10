@@ -148,6 +148,20 @@ environment.
 
 ---
 
+## Local development (`.env`)
+
+`docker compose` and `make up` (`scripts/up.sh`) read these from `.env` in the
+repository root. Start from `.env.example`.
+
+| Variable | Default | Notes |
+|---|---|---|
+| `WEB_PORT` `API_PORT` `MAILPIT_PORT` `OLLAMA_PORT` | `3000` `8000` `8025` `11434` | Ports on your machine. Change one when another program already uses it |
+| `LOCAL_MODEL` | `""` | The Ollama name of the AI model (e.g. `qwen3-vl:4b-instruct`), or `mock`. Empty = `make up` asks. `make model` changes it |
+| `COMPOSE_PROFILES` | `""` | `ollama` starts Ollama in Docker. Set by `make up`: empty when the Ollama app on your computer runs the model, or with `mock` |
+| `LLM_MODELS_FILE` | `models.mock.json` | A file in `config/`, mounted into the api container. `make up` sets `models.local.json`, which it writes from the models you downloaded |
+
+---
+
 ## mock-llm (local development only)
 
 | Variable | Default | Notes |

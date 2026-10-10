@@ -4,16 +4,16 @@ import styles from "./landing.module.css";
 
 const LEVELS = [
   {
-    title: "Local, with a mock model",
-    text: "The full app on your laptop. The mock model shows exactly what a model receives.",
-    time: "5 min",
+    title: "Local, with a real model",
+    text: "The full app on your laptop, with an open-source model you pick (Qwen, Gemma, Llama). No GPU needed.",
+    time: "15–30 min",
     cost: "free",
     href: "/docs/01-quickstart-local",
   },
   {
-    title: "A real model, locally",
-    text: "Chat with Qwen or Llama running on your own machine through Ollama.",
-    time: "15 min",
+    title: "More models, faster",
+    text: "Switch models, and use your Mac's or PC's GPU with the Ollama app.",
+    time: "10 min",
     cost: "free",
     href: "/docs/02-run-a-real-model-locally",
   },

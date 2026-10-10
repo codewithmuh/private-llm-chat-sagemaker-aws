@@ -9,8 +9,11 @@
 | Sign-up says "check your email" but nothing arrives | Local email goes to **Mailpit**: http://localhost:8025. With `make backend-dev`, the code is printed in the terminal |
 | "Your session expired. Refresh the page" on every action | Open the app on `http://localhost:3000`, not `127.0.0.1`: cookies from `localhost:8000` aren't sent to `127.0.0.1` |
 | The model picker is empty | The api couldn't load `LLM_MODELS_FILE`. `docker compose logs api` shows the reason (invalid JSON, missing file) |
-| "Could not reach the model server at http://ollama:11434/v1" | Ollama isn't running: `make ollama`, or use `host.docker.internal` for native Ollama ([guide 2](02-run-a-real-model-locally.md)) |
-| Ollama answers very slowly on a Mac | Docker on macOS can't use the GPU. Install the native Ollama app (guide 2, option B) |
+| "Could not reach the model server at http://ollama:11434/v1" | The Ollama container isn't running: run `make up` again. `docker compose logs ollama` shows why it stopped |
+| "Could not reach the model server at http://host.docker.internal:11434/v1" | The app is set up for the Ollama app, and it isn't open. Open Ollama, or `make model` to run models in Docker instead. On Linux, see the `OLLAMA_HOST` note in [guide 2](02-run-a-real-model-locally.md#make-answers-faster-the-ollama-app) |
+| `make up` stops at "Downloading..." with an error | No internet, or a mistyped model name (check it on https://ollama.com/library). Run `make model` to choose again. A download that stopped halfway resumes |
+| The model answers with an error about memory, or `docker compose logs ollama` says `model requires more system memory` | The model doesn't fit in Docker's memory. Choose a smaller one (`make model`), or raise Docker Desktop → Settings → Resources → Memory |
+| Answers are very slow | In Docker the model runs on the CPU (Docker on macOS can't use the GPU). Use the Ollama app ([guide 2](02-run-a-real-model-locally.md#make-answers-faster-the-ollama-app)), or a smaller model |
 | Docker errors like `read-only file system` or `input/output error` | Docker Desktop's VM disk is in a bad state (often after sleep). Restart Docker Desktop |
 | Google button missing | `GOOGLE_CLIENT_ID` is empty. Set it in `.env`, then `docker compose up -d api` |
 | Google popup: "origin is not allowed" | Add `http://localhost:3000` (exact, no trailing slash) to the OAuth client's **Authorized JavaScript origins**; it can take a few minutes to apply |

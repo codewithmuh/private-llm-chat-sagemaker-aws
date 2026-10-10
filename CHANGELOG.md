@@ -19,3 +19,11 @@ All notable changes to this project are documented here. The format follows
 - Terraform for the full stack on AWS (CloudFront, ALB, ECS Fargate, RDS, S3, SES,
   SageMaker).
 - Docker Compose for local development, with Mailpit and an optional Ollama profile.
+- `make up` runs a real open-source model locally: the first time it asks which model
+  (Qwen3-VL, Gemma 3, Llama 3.2, Qwen3...), downloads it with Ollama, writes
+  `config/models.local.json`, and checks that the model answers. `make model` switches
+  models. It uses the Ollama app when it's running (GPU), else Ollama in Docker.
+- `RUN_LOCALLY.md`: a step-by-step guide for beginners, from installing Docker to chatting.
+
+### Removed
+- `make ollama` and `config/models.ollama.json`: replaced by `make up` / `make model`.

@@ -1,21 +1,37 @@
-# 1. Run the app on your laptop (5 minutes, no GPU)
+# 1. Run the app on your laptop (no GPU)
 
-**Goal:** the whole application running locally: sign up, log in, chat, upload
-files, OCR. The "model" is a fake one that streams canned answers, so you can learn
-how the app works before paying for a GPU.
+**Goal:** the whole application running locally with a **real open-source AI model**:
+sign up, log in, chat, upload files, OCR. Everything runs on your computer, for free,
+so you can learn how the app works before paying for a GPU.
 
 **You need:** [Docker Desktop](https://www.docker.com/products/docker-desktop/) (or
-Docker Engine + Compose v2) and `git`. About 3 GB of disk.
+Docker Engine + Compose v2) and `git`. About 15 GB of free disk and 8 GB of memory.
+The first start downloads about 7–10 GB (the app, Ollama and the model), so it takes
+15–30 minutes; after that it starts in seconds.
 
 ## Start it
 
 ```bash
 git clone https://github.com/codewithmuh/private-llm-chat-sagemaker-aws.git
 cd private-llm-chat-sagemaker-aws
-make up            # or: cp .env.example .env && docker compose up -d --build
+make up
 ```
 
-The first build takes a few minutes. Then open:
+The first time, `make up` asks which AI model to use:
+
+```
+Which AI model should the app use?
+It runs on your computer, so your chats stay private. It downloads once.
+
+  1) Qwen3-VL 4B         3.3 GB   chat, images and OCR (recommended)
+  2) Gemma 3 4B          3.4 GB   chat and images, by Google
+  3) Qwen3 4B            2.5 GB   text only, quick and capable
+  ...
+Your choice [1]:
+```
+
+Press **Enter** for the recommended one. `make up` downloads it, connects the app to
+it, checks that it answers, and prints where to open the app:
 
 | What | URL |
 |---|---|
@@ -24,20 +40,22 @@ The first build takes a few minutes. Then open:
 | The API | http://localhost:8000/api/health/ |
 | Django admin | http://localhost:8000/admin/ |
 
-> Port already in use? Change `WEB_PORT`, `API_PORT` or `MAILPIT_PORT` in `.env` and
-> run `make up` again.
+> Port already in use? Change `WEB_PORT`, `API_PORT`, `MAILPIT_PORT` or `OLLAMA_PORT`
+> in `.env` and run `make up` again.
+
+More about the models, switching (`make model`), and making answers faster with the
+Ollama app: [guide 2](02-run-a-real-model-locally.md).
 
 ## Try it
 
 1. **Sign up** at http://localhost:3000. The app emails you a 6-digit code: open
    **Mailpit** (http://localhost:8025), copy the code, paste it in.
-2. **Chat.** Ask anything. The mock model answers by describing what the backend sent
-   it: the system prompt, the number of messages, the files. That's the real request a
-   real model would get.
-3. **Attach a file**: a PDF, a Word document, a text file or an image. Ask about it,
-   and the mock tells you the file was pasted into the prompt.
-4. **OCR**: open the OCR tool from the menu, drop in an image. (With the mock you get
-   sample text; with a real vision model, the real text.)
+2. **Chat.** Ask anything, then a follow-up. The answer streams in word by word. In
+   Docker the model runs on your CPU, so expect a few words per second.
+3. **Attach a file**: a PDF, a Word document, a text file or an image. Ask about it.
+   Documents are pasted into the prompt as text; images go to the model as pictures.
+4. **OCR**: open the OCR tool from the menu and drop in a screenshot or a photo of a
+   page. The vision model reads the text.
 5. **Turn on two-factor authentication** in Settings → Security, with an authenticator
    app (Google Authenticator, 1Password, Authy...) or email codes. Log out and back in.
 
@@ -61,32 +79,39 @@ browser ──► web (Next.js :3000)
    └──────► api (Django :8000) ──► postgres
                  │   │
                  │   └──► mailpit (catches all email)
-                 └──────► mock-llm (:8080, speaks the OpenAI API, like vLLM does)
+                 └──────► ollama (:11434, runs the model, speaks the OpenAI API like vLLM)
 ```
 
 The browser talks to the API directly. The API sends chat requests to the model
-server with the **same code** that talks to vLLM, Ollama or SageMaker: only the address
-in `config/models.mock.json` changes. That's the point of this project: the app doesn't
+server with the **same code** that talks to vLLM or SageMaker: only the address in
+`config/models.local.json` changes. That's the point of this project: the app doesn't
 care where the model runs.
 
 ## Useful commands
 
-```bash
-make logs          # follow api + web logs
-make down          # stop (data is kept)
-make reset         # stop and delete all local data
-make superuser     # create an admin account from the terminal
-```
+| Command | What it does |
+|---|---|
+| `make model` | Choose another AI model |
+| `make logs` | Follow the api and web logs |
+| `make down` | Stop (data and models are kept) |
+| `make reset` | Stop and delete all local data, including downloaded models |
+| `make superuser` | Create an admin account from the terminal |
 
 ## Without Docker
 
-Only the backend, with SQLite and a mock model built into Django:
+Only the backend, with SQLite and a mock model built into Django (it answers by
+describing what the backend sent it). In one terminal:
 
 ```bash
-make backend-dev   # API on :8000, emails printed in the terminal
-make frontend-dev  # in another terminal: UI on :3000
+make backend-dev
+```
+
+And in another (the UI on :3000):
+
+```bash
+make frontend-dev
 ```
 
 ## Next
 
-[2. Run a real model on your laptop with Ollama →](02-run-a-real-model-locally.md)
+[2. Run a real model on your laptop: switch models, make it faster →](02-run-a-real-model-locally.md)

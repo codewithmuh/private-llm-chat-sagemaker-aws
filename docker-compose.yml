@@ -1,16 +1,18 @@
-# The whole app on your laptop: `make up` (or `docker compose up -d --build`).
+# The whole app on your laptop: `make up` (scripts/up.sh). The first time it
+# asks which AI model to use, downloads it, and fills in .env.
 #
 #   web       http://localhost:3000   the chat UI (Next.js)
 #   api       http://localhost:8000   Django REST API, admin at /admin/
 #   mailpit   http://localhost:8025   every email the app sends (codes, resets)
 #   postgres                          the database
-#   mock-llm                          a fake model server: no GPU needed
+#   ollama                            runs the AI model (profile "ollama")
+#   mock-llm                          a fake model server, for testing the app
 #
-# Optional:
-#   --profile ollama    real open-source models on your machine (see docs/02-*)
+# COMPOSE_PROFILES=ollama in .env (set by `make up`) makes plain
+# `docker compose up -d --build` start Ollama too.
 #   -f docker-compose.aws.yml   use a model deployed on SageMaker (see docs/03-*)
 #
-# Ports can be changed in .env (WEB_PORT, API_PORT, MAILPIT_PORT).
+# Ports can be changed in .env (WEB_PORT, API_PORT, MAILPIT_PORT, OLLAMA_PORT).
 
 name: llmchat
 
@@ -69,9 +71,14 @@ services:
       - ./config:/config:ro
       - media:/app/media
     ports: ["${API_PORT:-8000}:8000"]
+    # So the api can reach the Ollama app when it runs on your computer instead
+    # of in Docker (Docker Desktop has this name built in; Linux needs it here).
+    extra_hosts: ["host.docker.internal:host-gateway"]
     depends_on:
       postgres: {condition: service_healthy}
       mock-llm: {condition: service_started}
+      # Only with the "ollama" profile: the model is downloaded before the api starts.
+      ollama-pull: {condition: service_completed_successfully, required: false}
 
   web:
     build:
@@ -84,22 +91,41 @@ services:
     ports: ["${WEB_PORT:-3000}:3000"]
     depends_on: [api]
 
-  # --- optional: real models on your machine -------------------------------
-  # docker compose --profile ollama up -d   (then LLM_MODELS_FILE=models.ollama.json)
-  # On a Mac, Docker has no GPU: the native Ollama app is much faster. See docs.
+  # --- the AI model, with Ollama (profile "ollama") ---------------------------
+  # scripts/up.sh enables this profile, downloads LOCAL_MODEL with a progress
+  # bar, and writes config/models.local.json. On a Mac, Docker has no GPU: the
+  # Ollama app (ollama.com) is much faster, and scripts/up.sh uses it instead
+  # when it is running.
   ollama:
     image: ollama/ollama:latest
     profiles: ["ollama"]
+    environment:
+      # Must match context_window in config/models.local.json (scripts/up.sh).
+      OLLAMA_CONTEXT_LENGTH: "8192"
+      # Keep the model in memory between messages, not just 5 minutes.
+      OLLAMA_KEEP_ALIVE: "30m"
     volumes: ["ollama:/root/.ollama"]
     ports: ["${OLLAMA_PORT:-11434}:11434"]
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 3s
+      timeout: 5s
+      retries: 30
 
+  # Downloads LOCAL_MODEL if it isn't there yet. Already downloaded: it exits at
+  # once, without going online, so the app also starts offline.
   ollama-pull:
     image: ollama/ollama:latest
     profiles: ["ollama"]
     environment:
       OLLAMA_HOST: http://ollama:11434
-    entrypoint: ["/bin/sh", "-c", "sleep 3 && ollama pull qwen2.5vl:3b && ollama pull llama3.2:3b"]
-    depends_on: [ollama]
+      LOCAL_MODEL: ${LOCAL_MODEL:-}
+    entrypoint:
+      - /bin/sh
+      - -c
+      - '[ -z "$$LOCAL_MODEL" ] || [ "$$LOCAL_MODEL" = mock ] || ollama show "$$LOCAL_MODEL" >/dev/null 2>&1 || ollama pull "$$LOCAL_MODEL"'
+    depends_on:
+      ollama: {condition: service_healthy}
     restart: "no"
 
 volumes:

@@ -17,17 +17,12 @@ help: ## Show this help
 	cp .env.example .env
 
 .PHONY: up
-up: .env ## Start everything locally (web :3000, api :8000, mail :8025)
-	$(COMPOSE) up -d --build
-	@echo ""
-	@echo "  Chat UI     http://localhost:$${WEB_PORT:-3000}"
-	@echo "  API         http://localhost:$${API_PORT:-8000}/api/health/"
-	@echo "  Emails      http://localhost:$${MAILPIT_PORT:-8025}   (verification codes land here)"
+up: ## Start everything locally; the first time, choose and download an AI model
+	@MODEL="$(MODEL)" ./scripts/up.sh
 
-.PHONY: ollama
-ollama: .env ## Also run real models locally with Ollama (set LLM_MODELS_FILE=models.ollama.json)
-	$(COMPOSE) --profile ollama up -d --build
-	@echo "Pulling models in the background: docker compose logs -f ollama-pull"
+.PHONY: model
+model: ## Choose another AI model (MODEL=llama3.2:3b skips the menu, MODEL=mock = no AI)
+	@MODEL="$(MODEL)" ./scripts/up.sh --choose
 
 .PHONY: up-aws
 up-aws: .env ## Local app + models on SageMaker (uses ~/.aws and AWS_PROFILE)

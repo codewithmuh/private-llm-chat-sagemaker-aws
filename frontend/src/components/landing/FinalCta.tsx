@@ -10,9 +10,10 @@ export function FinalCta() {
     <section className={styles.section}>
       <div className={styles.container}>
         <div className={styles.cta}>
-          <h2 className={styles.h2}>Run it locally in 5 minutes</h2>
+          <h2 className={styles.h2}>Run it locally</h2>
           <p className={styles.lead}>
-            You only need Docker. A mock model streams answers, so no GPU and no AWS account are needed to try it.
+            You only need Docker. Pick an open-source model and it runs on your laptop: no GPU and no AWS account
+            needed to try it.
           </p>
           <div className={styles.command}>
             <div className={styles.commandHead}>

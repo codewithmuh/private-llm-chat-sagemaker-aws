@@ -1,26 +1,26 @@
 # Run Private LLM Chat on your computer
 
-This guide takes you from a computer with nothing installed to chatting in the app.
-You don't need a GPU, an AWS account, or any programming experience. Plan for about
-15 minutes, most of it waiting for downloads.
+This guide takes you from a computer with nothing installed to chatting with a real
+AI model in the app. You don't need a GPU, an AWS account, or any programming
+experience. Plan for 30–45 minutes, most of it waiting for downloads.
 
 > **What you'll have at the end:** the whole app running on your own computer, with
-> sign-up, login, chat, file uploads and OCR. The AI model is a **pretend one** (a
-> "mock") that answers by describing what it received. That's on purpose: you can
-> try everything for free. Connecting a real model comes after this guide (see
-> [Next steps](#next-steps)).
+> sign-up, login, chat, file uploads and OCR, answered by a **real open-source AI
+> model** (such as Qwen or Llama) that also runs on your computer. Nothing you type
+> leaves your machine, and it's free.
 
 ## What you need
 
 | | |
 |---|---|
-| A computer | Mac, Windows 10/11, or Linux, ideally with 8 GB of memory or more |
-| Free disk space | At least 5 GB |
-| Internet | For the first setup only (it downloads 2–3 GB) |
-| Docker Desktop | Runs the app. Free for personal use. You install it in step 1 |
+| A computer | Mac, Windows 10/11, or Linux. **16 GB of memory** is comfortable; with 8 GB, pick the smallest model and give Docker 6 GB (Docker Desktop → Settings → Resources → Memory) |
+| Free disk space | About **15 GB** |
+| Internet | For the first setup only. It downloads 7–10 GB: the app, plus the AI model |
+| Docker Desktop | Runs the app and the model. Free for personal use. You install it in step 1 |
 | Git | Downloads the code. You install it in step 1 |
 
-You do **not** need to install Python, Node.js or a database. Docker brings all of them.
+You do **not** need to install Python, Node.js, a database or the AI model yourself.
+Docker and the start command take care of all of it.
 
 ### How to use the terminal
 
@@ -28,13 +28,14 @@ Every step below types commands into a **terminal**, a window where you type
 instructions instead of clicking.
 
 - **Mac:** press `Cmd + Space`, type `Terminal`, press Enter.
-- **Windows:** click Start, type `PowerShell`, open **Windows PowerShell**.
+- **Windows:** use **Git Bash**, which you install with Git in step 1. Click Start,
+  type `Git Bash`, and open it. (Not PowerShell: the start command needs Git Bash.)
 - **Linux:** press `Ctrl + Alt + T` on most systems.
 
 To run a command, copy it from this page, paste it into the terminal and press
-**Enter**. Wait until it finishes (you get a fresh line where you can type again)
-before running the next one. When a box shows several lines, run them one at a time,
-top to bottom.
+**Enter**. (In Git Bash, paste with `Shift + Insert` or a right-click.) Wait until it
+finishes (you get a fresh line where you can type again) before running the next one.
+When a box shows several lines, run them one at a time, top to bottom.
 
 ---
 
@@ -61,9 +62,9 @@ top to bottom.
   **command line developer tools**, click **Install** and wait. This also installs
   `make`, which you'll use in step 3.
 - **Windows:** download Git from https://git-scm.com/download/win and install it,
-  clicking **Next** to accept the defaults. Then **close PowerShell and open it again**
-  so it can find Git.
-- **Linux (Ubuntu/Debian):** run `sudo apt install git make`
+  clicking **Next** to accept the defaults. This also installs **Git Bash**: open it
+  now (Start → type `Git Bash`), and use it for the rest of this guide.
+- **Linux (Ubuntu/Debian):** run `sudo apt install git make curl`
 
 ### Check that it worked
 
@@ -83,7 +84,7 @@ git --version
 
 Each one should print a version number, such as `Docker version 29.0.0`,
 `Docker Compose version v2.40.0` and `git version 2.50.0`. If you see "command not
-found" or "is not recognized", see [Something went wrong?](#something-went-wrong).
+found", see [Something went wrong?](#something-went-wrong).
 
 ---
 
@@ -99,17 +100,17 @@ git clone https://github.com/codewithmuh/private-llm-chat-sagemaker-aws.git
 cd private-llm-chat-sagemaker-aws
 ```
 
-**Windows (PowerShell):**
+**Windows (Git Bash):**
 
-```powershell
+```bash
 cd ~
 git clone --config core.autocrlf=false https://github.com/codewithmuh/private-llm-chat-sagemaker-aws.git
 cd private-llm-chat-sagemaker-aws
 ```
 
 > **Windows users: keep `--config core.autocrlf=false`.** By default, Git on Windows
-> changes the line endings of text files, which breaks one of the app's startup
-> scripts inside Docker. This option keeps the files exactly as they are.
+> changes the line endings of text files, which breaks the app's scripts. This option
+> keeps the files exactly as they are.
 
 `cd` means "change directory": it moves the terminal into a folder. **Run every
 command from here on inside the project folder.** If you open a new terminal later,
@@ -121,7 +122,7 @@ cd ~/private-llm-chat-sagemaker-aws
 
 ---
 
-## Step 3: Start the app
+## Step 3: Start the app and choose your AI model
 
 Check that Docker Desktop is running, then:
 
@@ -131,25 +132,53 @@ Check that Docker Desktop is running, then:
 make up
 ```
 
-**Windows (PowerShell):** Windows doesn't come with `make`, so run the two commands
-it would run for you:
+**Windows (Git Bash):** Windows doesn't come with `make`, so run the script it runs:
 
-```powershell
-Copy-Item .env.example .env
-docker compose up -d --build
+```bash
+./scripts/up.sh
 ```
 
-What happens now:
+The first time, it asks which AI model to use:
 
-- Docker downloads what the app needs (a database, a test email inbox, Python,
-  Node.js) and builds the app. **The first time takes 5–15 minutes**, depending on
-  your internet and computer. Lots of text scrolls by. That's normal.
-- It's done when you get your prompt back and see lines like
-  `Container llmchat-web-1  Started`.
-- Starting the app again later takes seconds, because everything is already downloaded.
+```
+Which AI model should the app use?
+It runs on your computer, so your chats stay private. It downloads once.
 
-This step also created a file called `.env`, which holds the app's settings. You don't
-need to change it now.
+  1) Qwen3-VL 4B         3.3 GB   chat, images and OCR (recommended)
+  2) Gemma 3 4B          3.4 GB   chat and images, by Google
+  3) Qwen3 4B            2.5 GB   text only, quick and capable
+  4) Llama 3.2 3B        2.0 GB   text only, the smallest and fastest
+  5) Qwen3 4B Thinking   2.5 GB   text only, reasons step by step first (slower)
+  6) Qwen3-VL 8B         6.1 GB   chat, images and OCR, smarter and slower
+  7) Another model from https://ollama.com/library (you type its name)
+  8) No AI: the mock model, for testing the app (no download)
+
+Your choice [1]:
+```
+
+**Not sure? Just press Enter** to get the recommended model. It can chat, read
+pictures and pull text out of images. If a line says "needs more memory", pick a
+smaller model. You can change your mind later (see [Change the AI model](#change-the-ai-model)).
+
+What happens next:
+
+- It downloads **Ollama** (the program that runs the model) and **the model**, with a
+  progress bar, then builds the app. **The first time takes 15–30 minutes**, depending
+  on your internet and computer. Lots of text scrolls by. That's normal.
+- Then it asks the model a test question, to be sure everything is connected.
+- It's done when you see **Ready!**, with the address to open:
+
+  ```
+    Ready! Open http://localhost:3000 and sign up.
+    Emails (your sign-up code):  http://localhost:8025
+    AI model:  Qwen3-VL 4B (qwen3-vl:4b-instruct), in Ollama in Docker (CPU only).
+  ```
+
+- Starting the app again later takes seconds, and doesn't ask again: everything is
+  already downloaded.
+
+This step also created a file called `.env`, which holds the app's settings, including
+the model you chose. You don't need to change it now.
 
 ---
 
@@ -159,9 +188,8 @@ need to change it now.
 docker compose ps
 ```
 
-You should see five services: `api`, `mailpit`, `mock-llm`, `postgres` and `web`, all
-with a STATUS starting with `Up`. The `api` line says `(health: starting)` for up to a
-minute, then `(healthy)`. Run the command again until it does.
+You should see six services: `api`, `mailpit`, `mock-llm`, `ollama`, `postgres` and
+`web`, all with a STATUS starting with `Up`. (`ollama` is missing if you chose "No AI".)
 
 Then open this address in your web browser:
 
@@ -193,27 +221,40 @@ You're in.
 ## Step 6: Try it
 
 - **Chat:** type a message and press Enter. The answer appears word by word, like
-  ChatGPT.
-- **The answers look strange, and that's expected.** The pretend model doesn't really
-  answer: it **describes what the app sent it**, such as the instructions, how many
-  messages and which files. A real AI model gets exactly the same thing.
+  ChatGPT. The model runs on your computer's processor, so it's slower than ChatGPT:
+  expect a few words per second. For faster answers, see
+  [guide 2](docs/02-run-a-real-model-locally.md#make-answers-faster-the-ollama-app).
+- **Ask a follow-up.** The model remembers the conversation.
 - **Attach a file:** click the paperclip next to the message box and pick a PDF, Word
-  document, text file or image. Then ask about it.
-- **OCR (read text from a picture):** open **OCR tool** in the sidebar and drop in an
-  image. The pretend model returns sample text; a real vision model returns the real text.
+  document, text file or image. Then ask about it, for example "Summarize this".
+- **OCR (read text from a picture):** open **OCR tool** in the sidebar and drop in a
+  screenshot or a photo of a page.
 - **Settings:** open your user menu (bottom-left) for **Settings** and the light/dark
   theme. Under **Settings → Security** you can turn on two-factor authentication.
 
 ---
 
+## Change the AI model
+
+Run this, and pick another model from the same menu:
+
+| Mac / Linux | Windows (Git Bash) |
+|---|---|
+| `make model` | `./scripts/up.sh --choose` |
+
+It downloads the new model and makes it the default. Models you downloaded before stay
+in the app's model picker (the name at the top of the chat).
+
+---
+
 ## Stop, restart, start over
 
-| What you want | Mac / Linux | Windows (PowerShell) |
+| What you want | Mac / Linux | Windows (Git Bash) |
 |---|---|---|
-| Stop the app (accounts and chats are kept) | `make down` | `docker compose --profile ollama down` |
-| Start it again | `make up` | `docker compose up -d --build` |
+| Stop the app (accounts, chats and models are kept) | `make down` | `docker compose --profile ollama down` |
+| Start it again | `make up` | `./scripts/up.sh` |
 | Watch what the app is doing (press `Ctrl + C` to stop watching) | `make logs` | `docker compose logs -f api web` |
-| **Delete everything** and start fresh (erases all accounts, chats and files) | `make reset` | `docker compose --profile ollama down -v` |
+| **Delete everything** and start fresh (erases all accounts, chats, files and downloaded models) | `make reset` | `docker compose --profile ollama down -v` |
 
 Good to know:
 
@@ -244,21 +285,24 @@ The admin panel lists users and conversations, and lets you add AI models.
 
 | What you see | What to do |
 |---|---|
-| `Cannot connect to the Docker daemon`, `failed to connect to the docker API` or `error during connect` | Docker Desktop isn't running. Open it, wait for **Engine running**, and try again |
-| `docker: command not found` or `'docker' is not recognized` | Docker Desktop isn't installed, or the terminal was opened before you installed it. Close the terminal and open a new one |
-| `make: command not found` (Mac or Linux) | Mac: run `xcode-select --install`. Linux: run `sudo apt install make`. Or use the Windows commands in this guide, which work everywhere |
-| `'make' is not recognized` (Windows) | Expected. Use the Windows (PowerShell) commands in this guide |
-| `port is already allocated` or `address already in use` | Another program is using port 3000, 8000 or 8025. Open `.env`, change for example `WEB_PORT=3000` to `WEB_PORT=3001`, start again, and use http://localhost:3001 |
+| `Docker is not running`, `Cannot connect to the Docker daemon` or `failed to connect to the docker API` | Open Docker Desktop, wait for **Engine running**, and try again |
+| `docker: command not found` | Docker Desktop isn't installed, or the terminal was opened before you installed it. Close the terminal and open a new one |
+| `make: command not found` (Mac or Linux) | Mac: run `xcode-select --install`. Linux: run `sudo apt install make`. Or run `./scripts/up.sh` instead of `make up` |
+| `'make' is not recognized` or `./scripts/up.sh` not found (Windows) | You're in PowerShell. Open **Git Bash** instead, go to the project folder (`cd ~/private-llm-chat-sagemaker-aws`), and run `./scripts/up.sh` |
+| `port is already allocated` or `address already in use` | Another program is using port 3000, 8000, 8025 or 11434. Open `.env`, change for example `WEB_PORT=3000` to `WEB_PORT=3001`, start again, and use http://localhost:3001 |
+| The download stops with an error | Check your internet connection and run the start command again: the download continues where it stopped. If you typed a model name yourself, check it on https://ollama.com/library |
+| `the app cannot get an answer from the model`, or the chat shows an error about memory | The model is too big for the memory Docker has. Choose a smaller one ([Change the AI model](#change-the-ai-model)), or give Docker more memory: Docker Desktop → Settings → Resources → Memory |
+| Answers are very slow | The model runs on your processor. Choose a smaller model, or use the Ollama app, which uses your graphics chip: [guide 2](docs/02-run-a-real-model-locally.md#make-answers-faster-the-ollama-app) |
 | Windows: the `api` keeps restarting, and `docker compose logs api` shows `exec /app/docker-entrypoint.sh: no such file or directory` | Git changed the line endings. Delete the project folder, clone it again with `--config core.autocrlf=false` ([step 2](#step-2-download-the-code)), then do step 3 again |
-| The page says **"Not found. Try again"** or won't load | The server is still starting. Wait a minute, check that http://localhost:8000/api/health/ shows `ok`, then refresh |
+| The page says **"Not found. Try again"** or **"Can't reach the server"** | The app isn't running, or is still starting. Run the start command, wait for **Ready!**, then refresh |
 | "Your session expired. Refresh the page" on every click | You opened `127.0.0.1`. Use http://localhost:3000 instead |
 | The verification email never arrives | It never goes to your real inbox. Open Mailpit: http://localhost:8025 |
 | The password is rejected | Use at least 8 characters, not only numbers, not a common password, and not too close to your email |
 | `no space left on device` | Free some disk space. `docker system prune` deletes old Docker downloads you no longer use |
 | Odd errors like `read-only file system` or `input/output error` | Restart Docker Desktop (whale icon → **Restart**) |
-| The model list in the chat is empty | Run `docker compose logs api` and look for the error. It's usually a typo in a model file in `config/` |
 
-To see what the server is doing at any time, run `docker compose logs api`.
+To see what the server is doing at any time, run `docker compose logs api`. For the
+model, run `docker compose logs ollama`.
 
 More fixes are in [docs/troubleshooting.md](docs/troubleshooting.md). Still stuck?
 [Open an issue](https://github.com/codewithmuh/private-llm-chat-sagemaker-aws/issues)
@@ -269,9 +313,9 @@ anything private).
 
 ## Next steps
 
-- **Chat with a real AI model on your computer, for free:**
-  [Guide 2: run a real model locally with Ollama](docs/02-run-a-real-model-locally.md).
-  It downloads small open-source models (about 5 GB).
+- **Faster answers, and more about the models:**
+  [Guide 2: real models locally](docs/02-run-a-real-model-locally.md). It shows how to
+  use your computer's graphics chip with the Ollama app, and what each model is good at.
 - **Use a bigger model on your own AWS GPU:**
   [Guide 3: deploy a model on SageMaker](docs/03-deploy-a-model-on-sagemaker.md). This
   costs money for every hour the GPU runs.
@@ -298,7 +342,7 @@ make frontend-dev
 ```
 
 Then open http://localhost:3000. This mode uses a simple SQLite database file and a
-pretend model built into the server. Email verification is switched off, and any email
-the app sends is printed in the first terminal. More in
-[docs/01-quickstart-local.md](docs/01-quickstart-local.md#without-docker) and
-[CONTRIBUTING.md](CONTRIBUTING.md).
+pretend model built into the server, which answers by describing what it received.
+Email verification is switched off, and any email the app sends is printed in the first
+terminal. More in [docs/01-quickstart-local.md](docs/01-quickstart-local.md#without-docker)
+and [CONTRIBUTING.md](CONTRIBUTING.md).

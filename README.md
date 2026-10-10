@@ -15,7 +15,7 @@ itself off when nobody is using it.
 ![Next.js](https://img.shields.io/badge/next.js-16-black)
 ![Terraform](https://img.shields.io/badge/terraform-%E2%89%A51.9-7B42BC)
 
-[Quick start](#quick-start-5-minutes-no-gpu) ·
+[Quick start](#quick-start-no-gpu) ·
 [Learning path](#choose-your-path) ·
 [Architecture](docs/architecture.md) ·
 [Deploy on AWS](docs/04-deploy-the-full-stack-on-aws.md) ·
@@ -46,7 +46,7 @@ deployment**, with every step explained:
   without touching the app. The same app also talks to Ollama, LM Studio or any
   OpenAI-compatible server.
 - 🎓 **Made for learning.** Beginner-friendly guides, code that explains *why*, and a
-  mock model so you can run everything without a GPU on day one.
+  real open-source model on your laptop on day one, no GPU needed.
 
 ## Features
 
@@ -98,15 +98,15 @@ Each level builds on the previous one. Stop wherever you have what you need.
 
 | Level | You get | Time | Cost | Guide |
 |---|---|---|---|---|
-| **1. Local** | The full app on your laptop with a mock model | 5 min | free | [01-quickstart-local](docs/01-quickstart-local.md) |
-| **2. Real model, locally** | Chat with Qwen / Llama running on your machine (Ollama) | 15 min | free | [02-run-a-real-model-locally](docs/02-run-a-real-model-locally.md) |
+| **1. Local** | The full app on your laptop, with a real open-source model you pick (Ollama) | 15–30 min (downloads) | free | [01-quickstart-local](docs/01-quickstart-local.md) |
+| **2. More models, faster** | Switch models, and use your Mac's or PC's GPU with the Ollama app | 10 min | free | [02-run-a-real-model-locally](docs/02-run-a-real-model-locally.md) |
 | **3. Your GPU on SageMaker** | A private LLM endpoint in your AWS account, used by the local app | 30 min | ~$1.1–2.6 per GPU hour | [03-deploy-a-model-on-sagemaker](docs/03-deploy-a-model-on-sagemaker.md) |
 | **4. Everything on AWS** | The app on a public HTTPS URL for your team, GPU on demand | 1–2 h | ~$80–90/month + GPU hours | [04-deploy-the-full-stack-on-aws](docs/04-deploy-the-full-stack-on-aws.md) |
 | **5. Advanced** | Scale to zero, weights in S3 with no internet, several models per GPU, 70B models, CI/CD | — | — | [05-advanced](docs/05-advanced.md) |
 
-## Quick start (5 minutes, no GPU)
+## Quick start (no GPU)
 
-You need Docker.
+You need Docker, about 15 GB of free disk and 8 GB of memory.
 
 ```bash
 git clone https://github.com/codewithmuh/private-llm-chat-sagemaker-aws.git
@@ -114,13 +114,16 @@ cd private-llm-chat-sagemaker-aws
 make up
 ```
 
+The first time, `make up` asks which open-source model to run (Qwen3-VL, Gemma 3,
+Llama 3.2...), downloads it, and connects the app to it. Then:
+
 - Chat app: **http://localhost:3000** (sign up; the verification code arrives in Mailpit)
 - Emails: **http://localhost:8025**
 - API and admin: **http://localhost:8000/admin/**
 
-The default model is a mock that streams a description of what the backend sent it,
-the best way to see what a model actually receives. Then try a real one:
-[Ollama](docs/02-run-a-real-model-locally.md) or [SageMaker](docs/03-deploy-a-model-on-sagemaker.md).
+`make model` switches models; [guide 2](docs/02-run-a-real-model-locally.md) shows how
+to make answers faster with your GPU. New to all this?
+[RUN_LOCALLY.md](RUN_LOCALLY.md) walks you through it from zero.
 
 ## Deploy a model to SageMaker in three commands
 
