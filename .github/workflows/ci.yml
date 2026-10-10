@@ -105,3 +105,8 @@ jobs:
         with:
           context: ml/mock
           push: false
+      - name: search
+        uses: docker/build-push-action@v6
+        with:
+          context: search
+          push: false

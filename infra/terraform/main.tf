@@ -76,8 +76,12 @@ module "storage" {
 module "ecr" {
   source = "./modules/ecr"
 
-  name           = local.name
-  repositories   = concat(["api", "web"], var.enable_vllm_router_repo ? ["vllm-router"] : [])
+  name = local.name
+  repositories = concat(
+    ["api", "web"],
+    var.enable_web_search ? ["search"] : [],
+    var.enable_vllm_router_repo ? ["vllm-router"] : [],
+  )
   force_delete   = !local.is_prod
   immutable_tags = local.is_prod
 }
@@ -157,10 +161,17 @@ module "sagemaker" {
 # ======================================================== django secret ======
 # DJANGO_SECRET_KEY signs sessions and password-reset links. Generated once and
 # kept in Secrets Manager; ECS injects it into the containers at start-up, so
-# it never appears in the task definition.
+# it never appears in the task definition. SEARXNG_SECRET is the same idea for
+# the search container (SearXNG refuses to start without one).
 
 resource "random_password" "django_secret_key" {
   length  = 64
+  special = false
+}
+
+resource "random_password" "searxng_secret" {
+  count   = var.enable_web_search ? 1 : 0
+  length  = 48
   special = false
 }
 
@@ -174,8 +185,11 @@ resource "aws_secretsmanager_secret" "app" {
 }
 
 resource "aws_secretsmanager_secret_version" "app" {
-  secret_id     = aws_secretsmanager_secret.app.id
-  secret_string = jsonencode({ DJANGO_SECRET_KEY = random_password.django_secret_key.result })
+  secret_id = aws_secretsmanager_secret.app.id
+  secret_string = jsonencode(merge(
+    { DJANGO_SECRET_KEY = random_password.django_secret_key.result },
+    var.enable_web_search ? { SEARXNG_SECRET = random_password.searxng_secret[0].result } : {},
+  ))
 }
 
 # ========================================================== app settings =====
@@ -224,6 +238,9 @@ locals {
       ENABLE_ADMIN       = tostring(var.enable_admin)
 
       LLM_MODELS = jsonencode(local.llm_models)
+
+      # The search container shares the api task's network: localhost.
+      WEB_SEARCH_URL = var.enable_web_search ? "http://localhost:8080" : ""
     },
     var.extra_environment,
   )
@@ -261,6 +278,10 @@ module "ecs" {
   api_image = "${module.ecr.repository_urls["api"]}:${coalesce(var.image_tag, "not-built-yet")}"
   web_image = "${module.ecr.repository_urls["web"]}:${coalesce(var.image_tag, "not-built-yet")}"
   run_tasks = var.image_tag != null
+
+  web_search    = var.enable_web_search
+  search_image  = var.enable_web_search ? "${module.ecr.repository_urls["search"]}:${coalesce(var.image_tag, "not-built-yet")}" : ""
+  search_secret = var.enable_web_search ? "${aws_secretsmanager_secret_version.app.secret_arn}:SEARXNG_SECRET::" : ""
 
   django_environment = local.django_environment
   django_secrets     = local.django_secrets

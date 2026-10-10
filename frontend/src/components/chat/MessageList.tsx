@@ -10,7 +10,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { ArrowDown, CircleAlert, RefreshCw, X } from "lucide-react";
 import type { Message } from "@/lib/types";
-import type { SendError } from "@/providers/ChatProvider";
+import type { SearchState, SendError } from "@/providers/ChatProvider";
 import { MessageItem } from "./MessageItem";
 import styles from "./MessageList.module.css";
 
@@ -18,6 +18,8 @@ interface MessageListProps {
   messages: Message[];
   busy: boolean;
   sendError: SendError | null;
+  /** The web search of the answer being written, if "Search" was on. */
+  search: SearchState | null;
   onRegenerate: () => void;
   onDismissError: () => void;
   modelName: (id: string | null) => string | undefined;
@@ -31,6 +33,7 @@ export function MessageList({
   messages,
   busy,
   sendError,
+  search,
   onRegenerate,
   onDismissError,
   modelName,
@@ -96,6 +99,9 @@ export function MessageList({
                   busy={busy}
                   modelName={message.role === "assistant" ? modelName(message.model) : undefined}
                   onRegenerate={onRegenerate}
+                  // An answer's sources live on the question it answers.
+                  sources={message.role === "assistant" ? messages[index - 1]?.sources : undefined}
+                  search={index === lastIndex && message.role === "assistant" ? search : null}
                 />
               ))}
 

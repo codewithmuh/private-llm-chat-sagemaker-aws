@@ -256,6 +256,14 @@ LLM_TIMEOUT_SECONDS = env_int("LLM_TIMEOUT_SECONDS", 300)
 OCR_ENGINE = env("OCR_ENGINE", "auto")
 TITLE_GENERATION = env_bool("TITLE_GENERATION", True)
 GPU_CONTROLLER_INTERVAL = env_int("GPU_CONTROLLER_INTERVAL", 30)
+
+# Web search (the "Search" button in the chat): the base URL of a SearXNG
+# instance (search/ in this repo). Empty = the button is hidden.
+WEB_SEARCH_URL = env("WEB_SEARCH_URL").rstrip("/")
+WEB_SEARCH_RESULTS = env_int("WEB_SEARCH_RESULTS", 5)
+# How many of the results to open and read, not just their snippet.
+WEB_SEARCH_PAGES = env_int("WEB_SEARCH_PAGES", 3)
+WEB_SEARCH_TIMEOUT_SECONDS = env_int("WEB_SEARCH_TIMEOUT_SECONDS", 8)
 # Seconds between words for the in-process mock model (0 in tests).
 MOCK_LLM_DELAY = float(env("MOCK_LLM_DELAY", "0.02"))
 

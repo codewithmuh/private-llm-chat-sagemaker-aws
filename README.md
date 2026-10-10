@@ -55,6 +55,7 @@ deployment**, with every step explained:
 | **Chat** | Streaming answers, conversation history with search, rename and pin, regenerate, stop, Markdown with code highlighting, tables and math, per-user custom instructions, model picker, dark mode |
 | **Documents & images** | Attach PDFs, Word files, text and code. Their text goes into the prompt, trimmed to fit the model's context window. Images go to vision models as pictures |
 | **OCR** | Extract text from photos, screenshots and scanned PDFs with a vision LLM, falling back to Tesseract on the CPU. Copy, download, or chat about the result |
+| **Web search** | A **Search** button, like ChatGPT's: the app looks the question up with a self-hosted [SearXNG](https://docs.searxng.org) (no API key), reads the top pages, and the model answers from them with numbered citations and a sources list. Up-to-date answers from a model with old training data |
 | **Accounts** | Email + password with email verification, password reset, **Sign in with Google**, **two-factor auth** with an authenticator app (TOTP) or email codes, recovery codes |
 | **Models** | SageMaker endpoints (AWS's vLLM container: nothing to build), OpenAI-compatible servers (vLLM, Ollama, LM Studio), a mock for development; several models on one GPU with the included router |
 | **GPU control** | Per model: `on_demand` (start when used, delete when idle), `always_on`, `off`, or `manual`. Status is shown live in the UI and the admin |
@@ -84,6 +85,7 @@ flowchart LR
     API --> RDS[(PostgreSQL)]
     API --> S3[(S3 files)]
     API -->|IAM-signed, streaming| SM["SageMaker endpoint<br/>vLLM on a GPU"]
+    API -->|"Search" button| SX["SearXNG<br/>(next to the api)"] --> WEB((the web))
     CTRL["GPU controller"] -->|start / stop| SM
 ```
 
@@ -99,7 +101,7 @@ Each level builds on the previous one. Stop wherever you have what you need.
 | Level | You get | Time | Cost | Guide |
 |---|---|---|---|---|
 | **1. Local** | The full app on your laptop, with a real open-source model you pick (Ollama) | 15–30 min (downloads) | free | [01-quickstart-local](docs/01-quickstart-local.md) |
-| **2. More models, faster** | Switch models, and use your Mac's or PC's GPU with the Ollama app | 10 min | free | [02-run-a-real-model-locally](docs/02-run-a-real-model-locally.md) |
+| **2. More models, faster** | Switch models, and run them on your Mac's or PC's GPU with Docker Model Runner | 10 min | free | [02-run-a-real-model-locally](docs/02-run-a-real-model-locally.md) |
 | **3. Your GPU on SageMaker** | A private LLM endpoint in your AWS account, used by the local app | 30 min | ~$1.1–2.6 per GPU hour | [03-deploy-a-model-on-sagemaker](docs/03-deploy-a-model-on-sagemaker.md) |
 | **4. Everything on AWS** | The app on a public HTTPS URL for your team, GPU on demand | 1–2 h | ~$80–90/month + GPU hours | [04-deploy-the-full-stack-on-aws](docs/04-deploy-the-full-stack-on-aws.md) |
 | **5. Advanced** | Scale to zero, weights in S3 with no internet, several models per GPU, 70B models, CI/CD | — | — | [05-advanced](docs/05-advanced.md) |
@@ -121,8 +123,9 @@ Llama 3.2...), downloads it, and connects the app to it. Then:
 - Emails: **http://localhost:8025**
 - API and admin: **http://localhost:8000/admin/**
 
-`make model` switches models; [guide 2](docs/02-run-a-real-model-locally.md) shows how
-to make answers faster with your GPU. New to all this?
+On a Mac with Apple silicon (or an NVIDIA PC) it offers to turn on Docker Desktop's
+**Model Runner**, which runs the model on the GPU. `make model` switches models;
+[guide 2](docs/02-run-a-real-model-locally.md) explains the options. New to all this?
 [RUN_LOCALLY.md](RUN_LOCALLY.md) walks you through it from zero.
 
 ## Deploy a model to SageMaker in three commands

@@ -84,6 +84,79 @@
   min-width: 160px;
 }
 
+/* "Searching the web for …" while the search runs. */
+.searching {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+  font-size: 14px;
+  color: var(--text-2);
+}
+
+/* The web pages the answer used, numbered like its [1], [2] citations. */
+.sources {
+  margin-top: 14px;
+}
+
+.sourcesLabel {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--text-3);
+  text-transform: uppercase;
+}
+
+.sourcesList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.source {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 260px;
+  padding: 4px 10px 4px 4px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  font-size: 12.5px;
+  color: var(--text-2);
+  text-decoration: none;
+  transition:
+    background var(--fast) var(--ease),
+    color var(--fast);
+}
+
+.source:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.sourceNumber {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--surface-2);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.sourceText {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* Three bouncing dots while waiting for the first token. */
 .thinking {
   display: flex;

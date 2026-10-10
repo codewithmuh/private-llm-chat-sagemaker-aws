@@ -76,6 +76,47 @@ Key files, in order:
 4. `apps/chat/streaming.py` `stream_answer`: reads the provider in a background thread,
    writes Server-Sent Events, sends keep-alive pings, saves progress, and handles Stop.
 
+## Web search: answers newer than the model
+
+A model only knows what it read during training, so "who is the prime minister
+now?" gets an outdated or invented answer. ChatGPT fixes this with a search
+tool; this app does the same in its simplest form (retrieval-augmented
+generation, RAG), when the user turns on **Search**:
+
+```mermaid
+sequenceDiagram
+    participant B as Browser
+    participant A as Django api
+    participant S as SearXNG (search/)
+    participant W as Web pages
+    participant M as Model
+
+    B->>A: POST messages/ {content, web_search: true}
+    A->>M: follow-up? "rewrite this as a search query"
+    A-->>B: event: search {query}
+    A->>S: GET /search?q=...&format=json
+    S-->>A: top results (title, url, snippet)
+    A->>W: open the top 3 pages, keep their main text (public IPs only)
+    A-->>B: event: sources [1] [2] [3]...
+    A->>M: prompt with <search_results> [1]...[5] + "cite them"
+    M-->>B: the answer, citing [1], [2] (event: delta...)
+```
+
+- **SearXNG** is an open-source metasearch engine: it asks Google, Bing,
+  DuckDuckGo, Wikipedia... and merges the results, with no API key. It runs next
+  to the api: a `searxng` service in `docker-compose.yml`, and a second
+  container in the api's ECS task on AWS (`enable_web_search`), reachable only
+  by the api.
+- The results are saved on the user message (`search_query`, `sources`), so
+  follow-ups and Regenerate see them too (for the last two questions; older
+  ones are dropped to save context).
+- Opening pages for users is an SSRF risk (a result could point at
+  `169.254.169.254`, the AWS metadata service), so `apps/chat/websearch.py`
+  fetches only http(s) addresses that resolve to public IPs, checking every
+  redirect.
+- The query and the page addresses leave your infrastructure (that is what a
+  web search is); the conversation itself does not.
+
 ## Why these choices
 
 **Streaming with Server-Sent Events, not WebSockets.** SSE is plain HTTP: it works
@@ -152,3 +193,6 @@ the model it started with.
 - Files live in a **private** bucket; the browser gets 5-minute presigned links.
 - The Django admin shows conversation **metadata only**, not message text.
 - Everything (model, database, files) stays in **your** AWS account and region.
+- **Web search is opt-in per message.** Only then does a search query (and
+  requests for the result pages) leave your account; turn it off entirely with
+  `enable_web_search = false`.

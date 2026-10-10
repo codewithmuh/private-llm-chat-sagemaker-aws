@@ -61,6 +61,11 @@ class Message(models.Model):
     prompt_tokens = models.PositiveIntegerField(null=True, blank=True)
     completion_tokens = models.PositiveIntegerField(null=True, blank=True)
     duration_ms = models.PositiveIntegerField(null=True, blank=True)
+    # Web search (user messages sent with "Search" on): what was searched for
+    # and the results, page text included, so later turns and Regenerate can
+    # put them in the prompt again. See apps/chat/websearch.py.
+    search_query = models.CharField(max_length=300, blank=True)
+    sources = models.JSONField(default=list, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -83,5 +88,7 @@ class Message(models.Model):
             "attachments": [a.as_api() for a in self.attachments.all()],
             "usage": usage,
             "duration_ms": self.duration_ms,
+            "search_query": self.search_query or None,
+            "sources": [{k: s.get(k, "") for k in ("title", "url", "snippet")} for s in self.sources],
             "created_at": self.created_at.isoformat(),
         }

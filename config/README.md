@@ -5,7 +5,7 @@
 
 | File | Use it when |
 |---|---|
-| `models.local.json` | Normal local use. **Written by `make up` / `make model`** (`scripts/up.sh`) for the models you downloaded with Ollama, so it isn't in git |
+| `models.local.json` | Normal local use. **Written by `make up` / `make model`** (`scripts/up.sh`) for the models you downloaded (with Docker Model Runner or Ollama), so it isn't in git |
 | `models.mock.json` | You chose "No AI" in the menu (`make model MODEL=mock`): a fake model that streams canned answers, for testing the app itself |
 | `models.sagemaker.example.json` | You deployed a model to SageMaker and want the local app to use it. Copy it to `models.sagemaker.json`, fix `endpoint_name`/`region`, set `LLM_MODELS_FILE=models.sagemaker.json`, and use `make up-aws` |
 

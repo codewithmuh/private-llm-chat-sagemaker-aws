@@ -14,6 +14,8 @@ export interface AppConfig {
   email_verification: "mandatory" | "optional" | "none";
   max_upload_mb: number;
   accepted_file_types: string[];
+  /** The server can search the web: show the "Search" button. */
+  web_search: boolean;
 }
 
 export interface MfaStatus {
@@ -96,7 +98,17 @@ export interface Message {
   attachments: Attachment[];
   usage: Usage | null;
   duration_ms: number | null;
+  /** User messages sent with "Search" on: what was searched, and the results. */
+  search_query: string | null;
+  sources: Source[];
   created_at: string;
+}
+
+/** A web search result the answer can cite as [1], [2]... */
+export interface Source {
+  title: string;
+  url: string;
+  snippet: string;
 }
 
 export interface Attachment {
@@ -138,6 +150,8 @@ export type StreamErrorCode = "provider_error" | "model_starting" | "model_unava
 /** Every event the chat stream can send, keyed by its `event:` name. */
 export type ChatStreamEvent =
   | { event: "start"; data: { user_message: Message | null; assistant_message: Message } }
+  | { event: "search"; data: { message_id: string; query: string } }
+  | { event: "sources"; data: { message_id: string; query: string; sources: Source[]; error: string | null } }
   | { event: "delta"; data: { content: string } }
   | { event: "done"; data: { message: Message } }
   | { event: "title"; data: { conversation_id: string; title: string } }

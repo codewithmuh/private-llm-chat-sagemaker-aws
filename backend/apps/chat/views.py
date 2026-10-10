@@ -16,6 +16,7 @@ from apps.common.throttles import ChatThrottle
 from apps.files.models import Attachment
 from apps.llm.services import ensure_ready, get_model
 
+from . import websearch
 from .models import Conversation, Message
 from .streaming import stream_answer
 
@@ -99,6 +100,8 @@ class SendInput(serializers.Serializer):
         child=serializers.UUIDField(), required=False, default=list, max_length=MAX_ATTACHMENTS
     )
     model = serializers.CharField(max_length=100, required=False, allow_blank=True, allow_null=True)
+    # The "Search" button: look the question up on the web before answering.
+    web_search = serializers.BooleanField(required=False, default=False)
 
 
 class RegenerateInput(serializers.Serializer):
@@ -154,6 +157,8 @@ class SendMessageView(APIView):
             )
         if not content and not attachments:
             raise ApiError("Type a message or attach a file.", code="invalid", fields={"content": "Empty message."})
+        if data["web_search"] and not websearch.enabled():
+            raise ApiError("Web search is not set up on this server (WEB_SEARCH_URL).", code="invalid")
 
         model = _pick_model(conversation, data.get("model"), request.user)
         # Raises 503 model_starting (and wakes the GPU) before anything is
@@ -180,6 +185,7 @@ class SendMessageView(APIView):
                 user_message=user_message,
                 assistant=assistant,
                 first_exchange=first_exchange,
+                web_search=data["web_search"],
             )
         )
 

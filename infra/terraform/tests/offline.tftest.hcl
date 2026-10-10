@@ -120,6 +120,21 @@ run "defaults" {
     condition     = local.django_secrets["DB_PASSWORD"] == "arn:aws:secretsmanager:us-east-1:123456789012:secret:llmchat-dev/x-AbCdEf:password::"
     error_message = "DB_PASSWORD must reference the JSON key \"password\" of the database secret."
   }
+
+  # Web search is on by default: SearXNG runs in the api task, on localhost.
+  assert {
+    condition     = local.django_environment["WEB_SEARCH_URL"] == "http://localhost:8080"
+    error_message = "WEB_SEARCH_URL should point at the searxng container in the api task."
+  }
+
+  assert {
+    condition = (
+      [for c in jsondecode(module.ecs.api_container_definitions) : c.name] == ["api", "searxng"]
+      && !jsondecode(module.ecs.api_container_definitions)[1].essential
+      && jsondecode(module.ecs.api_container_definitions)[1].secrets[0].name == "SEARXNG_SECRET"
+    )
+    error_message = "The api task should run a non-essential searxng container with SEARXNG_SECRET."
+  }
 }
 
 # ------------------------------------- token, SES, extra (mixed) providers --

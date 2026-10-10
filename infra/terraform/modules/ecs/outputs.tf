@@ -28,3 +28,8 @@ output "role_arns" {
     aws_iam_role.gpu_controller.arn,
   ]
 }
+
+# The api task's containers as JSON (read by tests/offline.tftest.hcl).
+output "api_container_definitions" {
+  value = aws_ecs_task_definition.api.container_definitions
+}

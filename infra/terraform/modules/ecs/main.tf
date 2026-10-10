@@ -7,6 +7,9 @@
 #   gpu-controller  Same image as api, different command. No load balancer.
 #                   Every ~30 s it compares each SageMaker model's `scaling`
 #                   with reality and creates or deletes endpoints.
+#   searxng         (web_search = true) The web search behind the chat's
+#                   "Search" button: a second container in the api task, so the
+#                   api reaches it at http://localhost:8080. Never exposed.
 #
 # All three run on ARM64 (Graviton): about 20% cheaper than x86 on Fargate.
 # The images MUST be built for linux/arm64 (scripts/deploy.sh does this). An
@@ -22,9 +25,11 @@ locals {
     for k in sort(keys(var.django_secrets)) : { name = k, valueFrom = var.django_secrets[k] }
   ]
 
+  log_groups = concat(["api", "web", "gpu-controller"], var.web_search ? ["searxng"] : [])
+
   # One helper for the log settings every container shares.
   log_config = {
-    for svc in ["api", "web", "gpu-controller"] : svc => {
+    for svc in local.log_groups : svc => {
       logDriver = "awslogs"
       options = {
         "awslogs-group"         = aws_cloudwatch_log_group.this[svc].name
@@ -51,7 +56,7 @@ resource "aws_ecs_cluster" "this" {
 }
 
 resource "aws_cloudwatch_log_group" "this" {
-  for_each = toset(["api", "web", "gpu-controller"])
+  for_each = toset(local.log_groups)
 
   name              = "/ecs/${var.name}/${each.key}"
   retention_in_days = var.log_retention_days
@@ -73,7 +78,7 @@ resource "aws_ecs_task_definition" "api" {
     cpu_architecture        = "ARM64"
   }
 
-  container_definitions = jsonencode([{
+  container_definitions = jsonencode(concat([{
     name      = "api"
     image     = var.api_image
     essential = true
@@ -94,7 +99,23 @@ resource "aws_ecs_task_definition" "api" {
     # No container healthCheck: the ALB already checks /api/health/ and ECS
     # replaces tasks that fail it. (A container check would also need curl or
     # similar inside the image.)
-  }])
+    }],
+    # The web search engine, next to the api. Containers in one Fargate task
+    # share its network, so the api calls http://localhost:8080; with no port
+    # mapping (and the security group) nothing outside the task can reach it.
+    var.web_search ? [{
+      name  = "searxng"
+      image = var.search_image
+      # Not essential: if it stops, chat keeps working (Search reports an
+      # error) and ECS restarts this container alone, not the whole task.
+      essential     = false
+      restartPolicy = { enabled = true, restartAttemptPeriod = 60 }
+      secrets       = [{ name = "SEARXNG_SECRET", valueFrom = var.search_secret }]
+      # A soft reservation inside the task's memory (api_memory).
+      memoryReservation = 256
+      logConfiguration  = local.log_config["searxng"]
+    }] : [],
+  ))
 }
 
 resource "aws_ecs_service" "api" {

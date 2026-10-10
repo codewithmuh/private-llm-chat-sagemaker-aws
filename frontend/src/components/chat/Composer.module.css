@@ -55,6 +55,41 @@
   padding: 6px 10px 10px;
 }
 
+/* The "Search" toggle: a pill, tinted while it is on. */
+.search {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 12px 0 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  color: var(--text-2);
+  font-size: 13px;
+  font-weight: 500;
+  flex-shrink: 0;
+  transition:
+    background var(--fast) var(--ease),
+    color var(--fast),
+    border-color var(--fast);
+}
+
+.search:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.search[aria-pressed="true"] {
+  background: var(--accent-soft);
+  border-color: transparent;
+  color: var(--accent);
+}
+
+.search:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
 .hint {
   flex: 1;
   min-width: 0;

@@ -1,0 +1,28 @@
+# SearXNG settings for the chat's web search (see Dockerfile).
+# Everything not listed keeps SearXNG's defaults:
+# https://docs.searxng.org/admin/settings/index.html
+
+use_default_settings: true
+
+general:
+  instance_name: "Private LLM Chat search"
+
+search:
+  # The api reads results as JSON, which SearXNG turns off by default.
+  formats: [html, json]
+  # 0 = off, 1 = moderate, 2 = strict.
+  safe_search: 1
+
+server:
+  # Only the api talks to this instance; it is never exposed to the internet.
+  # So no bot limiter (it would also need a Valkey database), and none of the
+  # public-instance features.
+  limiter: false
+  public_instance: false
+  image_proxy: false
+  # secret_key comes from the SEARXNG_SECRET environment variable.
+
+outgoing:
+  # Seconds to wait for each search engine. The api gives up on the whole
+  # search after WEB_SEARCH_TIMEOUT_SECONDS (8 by default).
+  request_timeout: 4.0

@@ -41,6 +41,7 @@ from apps.files.ocr import run_ocr
 from apps.llm.models import LLMModel
 from apps.llm.providers import ChatRequest, ProviderError, Usage, provider_for
 
+from . import websearch
 from .models import Conversation, Message
 from .prompting import ContextTooLong, build_prompt, images_needing_ocr
 from .titles import generate_title
@@ -83,6 +84,31 @@ class _ProducerThread(threading.Thread):
             self.queue.put(_END)
 
 
+def _search_the_web(conversation: Conversation, user_message: Message, model: LLMModel) -> Iterator[bytes]:
+    """Events: `search` (the query, while searching), then `sources` (the results)."""
+    query = websearch.search_query(conversation, user_message, model)
+    yield sse("search", {"message_id": str(user_message.pk), "query": query})
+    error = None
+    try:
+        results = websearch.search(query)
+        websearch.read_pages(results)
+    except websearch.SearchError as exc:
+        log.warning("web search failed", extra={"reason": str(exc)})
+        results, error = [], f"{exc} Answering without it."
+    user_message.search_query = query
+    user_message.sources = [r.stored() for r in results]
+    user_message.save(update_fields=["search_query", "sources"])
+    yield sse(
+        "sources",
+        {
+            "message_id": str(user_message.pk),
+            "query": query,
+            "sources": [r.public() for r in results],
+            "error": error,
+        },
+    )
+
+
 def stream_answer(
     *,
     conversation: Conversation,
@@ -91,6 +117,7 @@ def stream_answer(
     user_message: Message | None,
     assistant: Message,
     first_exchange: bool,
+    web_search: bool = False,
 ) -> Iterator[bytes]:
     yield sse(
         "start",
@@ -128,6 +155,11 @@ def stream_answer(
                 except Exception:  # noqa: BLE001 - the prompt says "could not be read"
                     log.info("auto-OCR failed", extra={"attachment_id": str(attachment.id)})
                 yield PING
+
+        # "Search" was on: look the question up first. The results are saved on
+        # the user message, so build_prompt puts them in, and so do later turns.
+        if web_search and user_message is not None and user_message.content.strip():
+            yield from _search_the_web(conversation, user_message, model)
 
         try:
             prompt = build_prompt(conversation, model, user)

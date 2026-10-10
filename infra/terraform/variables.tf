@@ -164,6 +164,18 @@ variable "enable_admin" {
   default     = true
 }
 
+variable "enable_web_search" {
+  description = <<-EOT
+    The chat's "Search" button: run SearXNG (search/, built and pushed by
+    scripts/deploy.sh) as a second container in the api task, reachable only by
+    the api at http://localhost:8080. Its searches go out to the internet,
+    which the api tasks can reach in both network modes. About 150-250 MiB of
+    the api task's memory; raise api_memory if the task runs short.
+  EOT
+  type        = bool
+  default     = true
+}
+
 variable "extra_environment" {
   description = <<-EOT
     Extra environment variables for the api and gpu-controller containers, for

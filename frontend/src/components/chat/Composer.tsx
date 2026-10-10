@@ -8,6 +8,8 @@
  *   so we ignore it. On touch screens Enter always adds a new line.
  * - Files: paperclip button, drag and drop (handled by ChatView, which calls
  *   `addFiles` through the ref), or paste a screenshot. They upload at once.
+ * - Search: when the server has web search, a toggle next to the paperclip.
+ *   While it is on, every message is looked up on the web before the answer.
  * - While an answer streams, the Send button becomes Stop.
  */
 import {
@@ -22,7 +24,7 @@ import {
   type KeyboardEvent,
   type Ref,
 } from "react";
-import { ArrowUp, Paperclip, Square } from "lucide-react";
+import { ArrowUp, Globe, Paperclip, Square } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
 import { errorMessage } from "@/lib/api";
 import { takeComposerHandoff } from "@/lib/browser";
@@ -46,7 +48,7 @@ interface ComposerProps {
   model: Model | undefined;
   streaming: boolean;
   /** Resolve true when the message was accepted (the composer then clears). */
-  onSend: (content: string, attachments: Attachment[]) => Promise<boolean>;
+  onSend: (content: string, attachments: Attachment[], webSearch: boolean) => Promise<boolean>;
   onStop: () => void;
 }
 
@@ -58,6 +60,7 @@ export function Composer({ ref, conversationId, model, streaming, onSend, onStop
   const [handoff] = useState(() => (conversationId ? takeComposerHandoff(conversationId) : null));
   const [text, setText] = useState(handoff?.text ?? "");
   const [sending, setSending] = useState(false);
+  const [webSearch, setWebSearch] = useState(false);
   const uploads = useUploads(handoff?.attachments);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -123,7 +126,7 @@ export function Composer({ ref, conversationId, model, streaming, onSend, onStop
       .map((i) => i.attachment as Attachment);
     setText("");
     setSending(true);
-    const ok = await onSend(content, attachments);
+    const ok = await onSend(content, attachments, webSearch && config.web_search);
     setSending(false);
     if (ok) {
       uploads.release(draftItems);
@@ -219,6 +222,19 @@ export function Composer({ ref, conversationId, model, streaming, onSend, onStop
             event.target.value = ""; // allow picking the same file again
           }}
         />
+
+        {config.web_search && (
+          <button
+            type="button"
+            className={styles.search}
+            onClick={() => setWebSearch((on) => !on)}
+            aria-pressed={webSearch}
+            title={webSearch ? "Web search is on for your messages" : "Search the web before answering"}
+          >
+            <Globe size={16} aria-hidden />
+            Search
+          </button>
+        )}
 
         {model && !model.vision && hasImages && (
           <span className={styles.hint}>Images are converted to text for this model</span>

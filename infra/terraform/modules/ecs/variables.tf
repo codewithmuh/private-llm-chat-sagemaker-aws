@@ -60,6 +60,24 @@ variable "web_image" {
   type        = string
 }
 
+variable "web_search" {
+  description = "Run the SearXNG container (search_image) next to the api. A plain bool, known at plan time, because it decides which log groups exist."
+  type        = bool
+  default     = false
+}
+
+variable "search_image" {
+  description = "Full image URI of the SearXNG image (search/), when web_search is on."
+  type        = string
+  default     = ""
+}
+
+variable "search_secret" {
+  description = "Secrets Manager reference (\"<arn>:<json key>::\") for SEARXNG_SECRET."
+  type        = string
+  default     = ""
+}
+
 variable "run_tasks" {
   description = "false = create the services with zero tasks (no image pushed yet)."
   type        = bool

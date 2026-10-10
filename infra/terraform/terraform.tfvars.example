@@ -134,6 +134,10 @@
 #   },
 # ]
 
+# Web search (the chat's "Search" button): SearXNG runs as a second container in
+# the api task. Turn it off to keep every request inside AWS.
+# enable_web_search = true
+
 # Advanced: no internet at all for the model containers (weights from S3 only).
 # sagemaker_vpc_isolated = false
 

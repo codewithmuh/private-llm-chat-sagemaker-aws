@@ -5,14 +5,16 @@
 #   api       http://localhost:8000   Django REST API, admin at /admin/
 #   mailpit   http://localhost:8025   every email the app sends (codes, resets)
 #   postgres                          the database
-#   ollama                            runs the AI model (profile "ollama")
+#   searxng   http://localhost:8888   the web search behind the chat's "Search" button
+#   ollama                            runs the AI model on the CPU (profile "ollama";
+#                                     on a GPU, Docker Model Runner runs it instead)
 #   mock-llm                          a fake model server, for testing the app
 #
 # COMPOSE_PROFILES=ollama in .env (set by `make up`) makes plain
 # `docker compose up -d --build` start Ollama too.
 #   -f docker-compose.aws.yml   use a model deployed on SageMaker (see docs/03-*)
 #
-# Ports can be changed in .env (WEB_PORT, API_PORT, MAILPIT_PORT, OLLAMA_PORT).
+# Ports can be changed in .env (WEB_PORT, API_PORT, MAILPIT_PORT, SEARCH_PORT, OLLAMA_PORT).
 
 name: llmchat
 
@@ -38,6 +40,7 @@ x-api-env: &api-env
   STORAGE_BACKEND: local
   MEDIA_ROOT: /app/media
   AWS_REGION: ${AWS_REGION:-us-east-1}
+  WEB_SEARCH_URL: http://searxng:8080
 
 services:
   postgres:
@@ -60,6 +63,14 @@ services:
   mock-llm:
     build: ./ml/mock
 
+  # The chat's "Search" button: SearXNG with our settings (search/). The api
+  # calls it at http://searxng:8080; open http://localhost:8888 to try it.
+  searxng:
+    build: ./search
+    environment:
+      SEARXNG_SECRET: ${SEARXNG_SECRET:-local-dev-only-not-secret}
+    ports: ["${SEARCH_PORT:-8888}:8080"]
+
   api:
     build:
       context: ./backend
@@ -77,6 +88,7 @@ services:
     depends_on:
       postgres: {condition: service_healthy}
       mock-llm: {condition: service_started}
+      searxng: {condition: service_started}
       # Only with the "ollama" profile: the model is downloaded before the api starts.
       ollama-pull: {condition: service_completed_successfully, required: false}
 
@@ -91,11 +103,12 @@ services:
     ports: ["${WEB_PORT:-3000}:3000"]
     depends_on: [api]
 
-  # --- the AI model, with Ollama (profile "ollama") ---------------------------
-  # scripts/up.sh enables this profile, downloads LOCAL_MODEL with a progress
-  # bar, and writes config/models.local.json. On a Mac, Docker has no GPU: the
-  # Ollama app (ollama.com) is much faster, and scripts/up.sh uses it instead
-  # when it is running.
+  # --- the AI model on the CPU, with Ollama (profile "ollama") ---------------
+  # scripts/up.sh enables this profile when MODEL_ENGINE=ollama, downloads
+  # LOCAL_MODEL with a progress bar, and writes config/models.local.json.
+  # Containers get no GPU on a Mac, so when the computer has one it can use,
+  # scripts/up.sh prefers Docker Model Runner (part of Docker Desktop): it runs
+  # the model on the GPU, outside this file, at model-runner.docker.internal.
   ollama:
     image: ollama/ollama:latest
     profiles: ["ollama"]

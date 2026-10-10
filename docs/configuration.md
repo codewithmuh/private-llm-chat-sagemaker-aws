@@ -76,6 +76,10 @@ Because the browser sees a single origin, cookies and CSRF need no cross-origin 
 | `LLM_TIMEOUT_SECONDS` | `300` | Upper bound for one answer |
 | `OCR_ENGINE` | `auto` | `auto` (the OCR/vision model if one is ready, else Tesseract), `llm`, `tesseract`, `none` |
 | `TITLE_GENERATION` | `true` | Ask the model for a short title after the first answer |
+| `WEB_SEARCH_URL` | `""` | Base URL of a SearXNG instance (`search/`) for the chat's "Search" button. Empty hides the button. Local: `http://searxng:8080`; AWS: `http://localhost:8080` (the container next to the api, `enable_web_search`) |
+| `WEB_SEARCH_RESULTS` | `5` | Search results put in the prompt |
+| `WEB_SEARCH_PAGES` | `3` | How many of them are opened and read (the others give only their snippet). Each adds about 800 tokens to the prompt |
+| `WEB_SEARCH_TIMEOUT_SECONDS` | `8` | Per request: the search itself, and each page |
 | `GPU_CONTROLLER_INTERVAL` | `30` | Seconds between controller ticks |
 
 #### `LLM_MODELS` entries
@@ -155,9 +159,11 @@ repository root. Start from `.env.example`.
 
 | Variable | Default | Notes |
 |---|---|---|
-| `WEB_PORT` `API_PORT` `MAILPIT_PORT` `OLLAMA_PORT` | `3000` `8000` `8025` `11434` | Ports on your machine. Change one when another program already uses it |
-| `LOCAL_MODEL` | `""` | The Ollama name of the AI model (e.g. `qwen3-vl:4b-instruct`), or `mock`. Empty = `make up` asks. `make model` changes it |
-| `COMPOSE_PROFILES` | `""` | `ollama` starts Ollama in Docker. Set by `make up`: empty when the Ollama app on your computer runs the model, or with `mock` |
+| `WEB_PORT` `API_PORT` `MAILPIT_PORT` `SEARCH_PORT` `OLLAMA_PORT` | `3000` `8000` `8025` `8888` `11434` | Ports on your machine. Change one when another program already uses it |
+| `SEARXNG_SECRET` | dev-only value | The search engine's secret key (any long random string). On AWS, Terraform generates it |
+| `MODEL_ENGINE` | `""` | Where the model runs: `docker-model-runner` (Docker Desktop's Model Runner, on the GPU), `ollama` (a container, CPU only) or `ollama-app`. Empty = `make up` picks (and asks before turning Model Runner on) |
+| `LOCAL_MODEL` | `""` | The model's name in that engine (e.g. `ai/qwen3-vl:8B`, `qwen3-vl:4b-instruct`), or `mock`. Empty = `make up` asks. `make model` changes both |
+| `COMPOSE_PROFILES` | `""` | `ollama` starts Ollama in Docker. Set by `make up`: only with `MODEL_ENGINE=ollama` |
 | `LLM_MODELS_FILE` | `models.mock.json` | A file in `config/`, mounted into the api container. `make up` sets `models.local.json`, which it writes from the models you downloaded |
 
 ---

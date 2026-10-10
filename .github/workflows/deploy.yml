@@ -1,4 +1,4 @@
-# Build the api and web images and deploy them to AWS.
+# Build the api, web and search images and deploy them to AWS.
 #
 # OFF by default, so forks and fresh clones do not fail on every push. Turn it on:
 #   1. terraform apply with enable_github_oidc = true and github_repository = "<owner>/<repo>"
@@ -107,10 +107,26 @@ jobs:
             target: ""
             # Empty = the browser calls /api/ on the same origin (CloudFront routes it).
             build_args: NEXT_PUBLIC_API_URL=
+          - component: search
+            # SearXNG + our settings, for the chat's "Search" button. Set the
+            # repository variable WEB_SEARCH=false if you deploy with
+            # enable_web_search = false (there is no search repository then).
+            context: search
+            file: search/Dockerfile
+            target: ""
+            build_args: ""
     steps:
+      - name: Skip the search image (web search turned off)
+        if: matrix.component == 'search' && vars.WEB_SEARCH == 'false'
+        run: |
+          echo "WEB_SEARCH is false, so the search image is not built."
+          echo "SKIP=true" >> "$GITHUB_ENV"
+
       - uses: actions/checkout@v7
+        if: env.SKIP != 'true'
 
       - name: AWS credentials (OIDC)
+        if: env.SKIP != 'true'
         uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
@@ -118,12 +134,15 @@ jobs:
           aws-region: ${{ vars.AWS_REGION }}
 
       - name: Log in to ECR
+        if: env.SKIP != 'true'
         id: ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      - uses: docker/setup-buildx-action@v4
+      - if: env.SKIP != 'true'
+        uses: docker/setup-buildx-action@v4
 
       - name: Build and push
+        if: env.SKIP != 'true'
         uses: docker/build-push-action@v7
         with:
           context: ${{ matrix.context }}

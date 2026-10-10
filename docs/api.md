@@ -83,12 +83,15 @@ to change these.
   "signup_enabled": true,
   "email_verification": "mandatory",
   "max_upload_mb": 20,
-  "accepted_file_types": [".pdf", ".docx", ".txt", ".md", ".csv", ".json", ".png", ".jpg", ".jpeg", ".webp", ".gif"]
+  "accepted_file_types": [".pdf", ".docx", ".txt", ".md", ".csv", ".json", ".png", ".jpg", ".jpeg", ".webp", ".gif"],
+  "web_search": true
 }
 ```
 
 `google_client_id` is `null` when Google sign-in is not configured. Hide the
 button in that case. `email_verification` is `"mandatory"`, `"optional"` or `"none"`.
+`web_search` is `true` when the server can search the web (`WEB_SEARCH_URL` is
+set): show the "Search" button.
 
 ---
 
@@ -251,9 +254,17 @@ server then generates one and sends a `title` event on the stream.
   "attachments": [ { …Attachment } ],
   "usage": { "prompt_tokens": 812, "completion_tokens": 240 },
   "duration_ms": 5120,
+  "search_query": null,
+  "sources": [],
   "created_at": "2026-09-24T10:05:00Z"
 }
 ```
+
+`search_query` and `sources` are set on **user** messages sent with
+`web_search: true`: what was searched for, and the results
+(`[{"title", "url", "snippet"}]`, numbered from 1 in the order given). The
+answer that follows cites them as `[1]`, `[2]`… The text read from each page
+stays on the server.
 
 `role`: `"user"` or `"assistant"`. An assistant `content` may start with
 `<think>…</think>`: the reasoning of a "thinking" model (DeepSeek-R1, Qwen3),
@@ -285,13 +296,19 @@ Send a user message and stream the assistant's answer.
 {
   "content": "What is in this invoice?",
   "attachment_ids": ["a1b2…"],
-  "model": "qwen3-vl-8b"
+  "model": "qwen3-vl-8b",
+  "web_search": false
 }
 ```
 
 - `content` may be empty only if there are attachments.
 - `attachment_ids`: files uploaded with `POST /api/files/` (max 10).
 - `model` is optional. It switches the conversation to that model.
+- `web_search` (default `false`): look the question up on the web before
+  answering (the "Search" button). `400` if the server has no search engine
+  (`/api/config/` says `web_search: false`). Follow-ups are rewritten into a
+  full query by the model first, so "and its population?" searches for the
+  right thing.
 
 ### `POST /api/conversations/{id}/regenerate/`
 
@@ -314,6 +331,12 @@ If validation fails before streaming starts, you get a normal JSON error
 event: start
 data: {"user_message": {…Message}, "assistant_message": {…Message, "status": "streaming", "content": ""}}
 
+event: search
+data: {"message_id": "5b2e…", "query": "prime minister of Pakistan"}
+
+event: sources
+data: {"message_id": "5b2e…", "query": "prime minister of Pakistan", "sources": [{"title": "…", "url": "https://…", "snippet": "…"}], "error": null}
+
 event: delta
 data: {"content": "Hello"}
 
@@ -328,6 +351,10 @@ data: {"conversation_id": "9f1e…", "title": "Greeting the world"}
 ```
 
 - `start`: first event. `user_message` is `null` on regenerate.
+- `search`, `sources`: only with `web_search: true`. `search` says what is
+  being looked up (a few seconds); `sources` carries the results, which are
+  now also on the user message (`message_id`). If the search failed, `sources`
+  is empty and `error` says why; the model answers anyway, without them.
 - `delta`: a piece of the answer; append it.
 - `done`: the final saved message (`status` is `complete` or `stopped`).
 - `title`: only after the first exchange in a conversation.

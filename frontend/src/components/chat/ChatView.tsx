@@ -62,13 +62,14 @@ export function ChatView({ conversationId: routeId }: { conversationId: string |
   };
 
   const onSend = useCallback(
-    async (content: string, attachments: Attachment[]) => {
+    async (content: string, attachments: Attachment[], webSearch: boolean) => {
       let exists = conversationId !== null;
       try {
         const id = await send(conversationId, {
           content,
           attachments,
           model: modelId,
+          webSearch,
           onCreated: (newId) => {
             exists = true;
             setCreatedId(newId); // later sends from this screen reuse it
@@ -162,6 +163,7 @@ export function ChatView({ conversationId: routeId }: { conversationId: string |
       <MessageList
         messages={thread?.messages ?? []}
         busy={busy}
+        search={thread?.search ?? null}
         sendError={thread?.sendError ?? null}
         onRegenerate={onRegenerate}
         onDismissError={onDismissError}

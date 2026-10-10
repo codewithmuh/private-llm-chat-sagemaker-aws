@@ -46,7 +46,8 @@ def answer_for(body: dict) -> str:
     last_user = next((m for m in reversed(messages) if m.get("role") == "user"), {})
     text, images = _flatten(last_user.get("content"))
     documents = re.findall(r'<(?:document|image) name="([^"]+)"', text)
-    question = re.sub(r"<(document|image)[^>]*>.*?</\1>", "", text, flags=re.DOTALL).strip()
+    search = re.search(r'<search_results query="([^"]*)"[^>]*>(.*?)</search_results>', text, re.DOTALL)
+    question = re.sub(r"<(document|image|search_results)[^>]*>.*?</\1>", "", text, flags=re.DOTALL).strip()
 
     if question.lower().startswith("transcribe all text"):
         return (
@@ -71,6 +72,9 @@ def answer_for(body: dict) -> str:
     ]
     if documents:
         lines.append(f"- **Files pasted into the prompt:** {', '.join(documents)}")
+    if search:
+        found = len(re.findall(r"^\[\d+\] ", search.group(2), re.MULTILINE))
+        lines.append(f"- **Web search results:** {found}, for the query _{search.group(1)}_")
     if images:
         lines.append(f"- **Images attached:** {images} (base64 `image_url` parts)")
     lines += [

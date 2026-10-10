@@ -212,7 +212,7 @@ export function Architecture() {
           <h2 className={landing.h2}>A standard AWS stack you can read in one sitting</h2>
           <p className={landing.lead}>
             Everything runs in your account, created by Terraform. Locally, Docker Compose runs the same web and api
-            images with PostgreSQL, Mailpit, and Ollama running an open-source model instead.
+            images with PostgreSQL, Mailpit, SearXNG for web search, and an open-source model on your own GPU.
           </p>
         </div>
 

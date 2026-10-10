@@ -138,40 +138,58 @@ make up
 ./scripts/up.sh
 ```
 
-The first time, it asks which AI model to use:
+The first time, it asks you two things.
+
+**1. On a Mac with an M1/M2/M3/M4 chip, or a PC with an NVIDIA graphics card**, it
+first asks:
+
+```
+Docker Model Runner (part of Docker Desktop) runs AI models on your GPU:
+answers come several times faster than from a container. It is switched off.
+Turn it on? This runs: docker desktop enable model-runner  [Y/n]
+```
+
+**Press Enter (yes).** It switches on a feature of Docker Desktop that you already
+have; nothing new is installed. The AI then uses your computer's graphics chip
+instead of only its processor. (Say no, or on other computers, and the AI runs in a
+normal Docker container: it works, just slower.)
+
+**2. Which AI model to use:**
 
 ```
 Which AI model should the app use?
 It runs on your computer, so your chats stay private. It downloads once.
 
-  1) Qwen3-VL 4B         3.3 GB   chat, images and OCR (recommended)
+  1) Qwen3-VL 4B         3.3 GB   chat, images and OCR
   2) Gemma 3 4B          3.4 GB   chat and images, by Google
   3) Qwen3 4B            2.5 GB   text only, quick and capable
   4) Llama 3.2 3B        2.0 GB   text only, the smallest and fastest
   5) Qwen3 4B Thinking   2.5 GB   text only, reasons step by step first (slower)
-  6) Qwen3-VL 8B         6.1 GB   chat, images and OCR, smarter and slower
-  7) Another model from https://ollama.com/library (you type its name)
+  6) Qwen3-VL 8B         6.2 GB   chat, images and OCR, smarter (recommended)
+  7) Another model from https://hub.docker.com/u/ai (or hf.co/...) (you type its name)
   8) No AI: the mock model, for testing the app (no download)
 
-Your choice [1]:
+Your choice [6]:
 ```
 
-**Not sure? Just press Enter** to get the recommended model. It can chat, read
-pictures and pull text out of images. If a line says "needs more memory", pick a
-smaller model. You can change your mind later (see [Change the AI model](#change-the-ai-model)).
+**Not sure? Just press Enter** to get the model marked "(recommended)": the best one
+your computer can run well. It can chat, read pictures and pull text out of images.
+If a line says "needs more memory", pick a smaller model. You can change your mind
+later (see [Change the AI model](#change-the-ai-model)).
 
 What happens next:
 
-- It downloads **Ollama** (the program that runs the model) and **the model**, with a
-  progress bar, then builds the app. **The first time takes 15–30 minutes**, depending
-  on your internet and computer. Lots of text scrolls by. That's normal.
+- It downloads **the model** with a progress bar (and, without Model Runner,
+  **Ollama**, the program that runs it), then builds the app. **The first time takes
+  15–45 minutes**, depending on your internet and computer. Lots of text scrolls by.
+  That's normal.
 - Then it asks the model a test question, to be sure everything is connected.
 - It's done when you see **Ready!**, with the address to open:
 
   ```
     Ready! Open http://localhost:3000 and sign up.
     Emails (your sign-up code):  http://localhost:8025
-    AI model:  Qwen3-VL 4B (qwen3-vl:4b-instruct), in Ollama in Docker (CPU only).
+    AI model:  Qwen3-VL 8B (ai/qwen3-vl:8B), in Docker Model Runner (GPU).
   ```
 
 - Starting the app again later takes seconds, and doesn't ask again: everything is
@@ -188,8 +206,10 @@ the model you chose. You don't need to change it now.
 docker compose ps
 ```
 
-You should see six services: `api`, `mailpit`, `mock-llm`, `ollama`, `postgres` and
-`web`, all with a STATUS starting with `Up`. (`ollama` is missing if you chose "No AI".)
+You should see `api`, `mailpit`, `mock-llm`, `postgres`, `searxng` and `web`, all
+with a STATUS starting with `Up`, plus `ollama` if the AI runs in a container. (With
+Docker Model Runner the AI isn't in this list: Docker Desktop runs it. Check it with
+`docker model ps`.)
 
 Then open this address in your web browser:
 
@@ -221,12 +241,19 @@ You're in.
 ## Step 6: Try it
 
 - **Chat:** type a message and press Enter. The answer appears word by word, like
-  ChatGPT. The model runs on your computer's processor, so it's slower than ChatGPT:
-  expect a few words per second. For faster answers, see
-  [guide 2](docs/02-run-a-real-model-locally.md#make-answers-faster-the-ollama-app).
+  ChatGPT. With Docker Model Runner (your graphics chip) it writes quickly; in a
+  container (processor only) expect a few words per second. See
+  [guide 2](docs/02-run-a-real-model-locally.md#make-answers-faster-docker-model-runner).
 - **Ask a follow-up.** The model remembers the conversation.
 - **Attach a file:** click the paperclip next to the message box and pick a PDF, Word
   document, text file or image. Then ask about it, for example "Summarize this".
+- **Search the web:** click **Search** next to the paperclip (it turns green), then ask
+  something recent, like "Who is the prime minister of Pakistan?". The app looks it
+  up first, the model answers from the pages it found, and the sources are listed
+  under the answer as [1], [2]... Without Search, the model only knows what it learned
+  during training, which can be out of date. The search engine is
+  [SearXNG](https://docs.searxng.org), running on your computer as part of the app:
+  open http://localhost:8888 to try it yourself.
 - **OCR (read text from a picture):** open **OCR tool** in the sidebar and drop in a
   screenshot or a photo of a page.
 - **Settings:** open your user menu (bottom-left) for **Settings** and the light/dark
@@ -289,10 +316,12 @@ The admin panel lists users and conversations, and lets you add AI models.
 | `docker: command not found` | Docker Desktop isn't installed, or the terminal was opened before you installed it. Close the terminal and open a new one |
 | `make: command not found` (Mac or Linux) | Mac: run `xcode-select --install`. Linux: run `sudo apt install make`. Or run `./scripts/up.sh` instead of `make up` |
 | `'make' is not recognized` or `./scripts/up.sh` not found (Windows) | You're in PowerShell. Open **Git Bash** instead, go to the project folder (`cd ~/private-llm-chat-sagemaker-aws`), and run `./scripts/up.sh` |
-| `port is already allocated` or `address already in use` | Another program is using port 3000, 8000, 8025 or 11434. Open `.env`, change for example `WEB_PORT=3000` to `WEB_PORT=3001`, start again, and use http://localhost:3001 |
+| `port is already allocated` or `address already in use` | Another program is using port 3000, 8000, 8025, 8888 or 11434. Open `.env`, change for example `WEB_PORT=3000` to `WEB_PORT=3001`, start again, and use http://localhost:3001 |
 | The download stops with an error | Check your internet connection and run the start command again: the download continues where it stopped. If you typed a model name yourself, check it on https://ollama.com/library |
 | `the app cannot get an answer from the model`, or the chat shows an error about memory | The model is too big for the memory Docker has. Choose a smaller one ([Change the AI model](#change-the-ai-model)), or give Docker more memory: Docker Desktop → Settings → Resources → Memory |
-| Answers are very slow | The model runs on your processor. Choose a smaller model, or use the Ollama app, which uses your graphics chip: [guide 2](docs/02-run-a-real-model-locally.md#make-answers-faster-the-ollama-app) |
+| "Web search failed" under an answer | The search engines refused for a moment (they limit automated searches). Try again in a minute; `docker compose logs searxng` shows which engines answered |
+| Answers are very slow | The model runs on your processor (`AI model: ... CPU only` when it starts). On a Mac with an M chip or a PC with an NVIDIA card, run the "Change the AI model" command and answer yes to Docker Model Runner. Otherwise, choose a smaller model |
+| `Docker Model Runner is switched off` | It was turned off in Docker Desktop. Turn it back on in Docker Desktop → Settings → AI, or run the "Change the AI model" command to choose again |
 | Windows: the `api` keeps restarting, and `docker compose logs api` shows `exec /app/docker-entrypoint.sh: no such file or directory` | Git changed the line endings. Delete the project folder, clone it again with `--config core.autocrlf=false` ([step 2](#step-2-download-the-code)), then do step 3 again |
 | The page says **"Not found. Try again"** or **"Can't reach the server"** | The app isn't running, or is still starting. Run the start command, wait for **Ready!**, then refresh |
 | "Your session expired. Refresh the page" on every click | You opened `127.0.0.1`. Use http://localhost:3000 instead |
@@ -314,8 +343,8 @@ anything private).
 ## Next steps
 
 - **Faster answers, and more about the models:**
-  [Guide 2: real models locally](docs/02-run-a-real-model-locally.md). It shows how to
-  use your computer's graphics chip with the Ollama app, and what each model is good at.
+  [Guide 2: real models locally](docs/02-run-a-real-model-locally.md): what each model
+  is good at, and how Docker Model Runner uses your computer's graphics chip.
 - **Use a bigger model on your own AWS GPU:**
   [Guide 3: deploy a model on SageMaker](docs/03-deploy-a-model-on-sagemaker.md). This
   costs money for every hour the GPU runs.

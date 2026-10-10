@@ -17,6 +17,7 @@ export const DEFAULT_CONFIG: AppConfig = {
   email_verification: "mandatory",
   max_upload_mb: 20,
   accepted_file_types: [".pdf", ".docx", ".txt", ".md", ".csv", ".json", ".png", ".jpg", ".jpeg", ".webp", ".gif"],
+  web_search: false,
 };
 
 interface ConfigValue {

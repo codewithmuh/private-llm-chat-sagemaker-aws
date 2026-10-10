@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
-# Build the api and web images, push them to ECR, and roll them out.
+# Build the api, web and search images, push them to ECR, and roll them out.
+# (search = SearXNG for the chat's "Search" button; skipped when
+# enable_web_search = false in terraform.tfvars.)
 #
 #   ./scripts/deploy.sh                 build, push, terraform apply (asks to confirm)
 #   ./scripts/deploy.sh --yes           ... without the confirmation prompt
@@ -81,18 +83,28 @@ aws sts get-caller-identity --query Arn --output text >/dev/null 2>&1 \
 
 # ------------------------------------------------ ecr repositories (first run)
 
+# Web search is on unless a tfvars file turns it off (variable enable_web_search).
+WANT_SEARCH=true
+if grep -qsE '^[[:space:]]*enable_web_search[[:space:]]*=[[:space:]]*false' "$TF_DIR"/*.tfvars; then
+  WANT_SEARCH=false
+fi
+
 REPOS_JSON="$(tf output -json ecr_repository_urls 2>/dev/null || true)"
 [ -n "$REPOS_JSON" ] || REPOS_JSON='{}'
 API_REPO="$(printf '%s' "$REPOS_JSON" | json_get api 2>/dev/null || true)"
-if [ -z "$API_REPO" ]; then
-  say "No ECR repositories in the Terraform state yet: creating them first"
+SEARCH_REPO="$(printf '%s' "$REPOS_JSON" | json_get search 2>/dev/null || true)"
+# Missing repositories: a new stack, or one deployed before web search existed.
+if [ -z "$API_REPO" ] || { [ "$WANT_SEARCH" = true ] && [ -z "$SEARCH_REPO" ]; }; then
+  say "Creating the missing ECR repositories first"
   echo "(terraform warns that -target is for exceptional cases; this is one.)"
   tf apply -input=false ${AUTO_APPROVE:+"$AUTO_APPROVE"} -target=module.ecr
   REPOS_JSON="$(tf output -json ecr_repository_urls)"
   API_REPO="$(printf '%s' "$REPOS_JSON" | json_get api)"
+  SEARCH_REPO="$(printf '%s' "$REPOS_JSON" | json_get search 2>/dev/null || true)"
 fi
 WEB_REPO="$(printf '%s' "$REPOS_JSON" | json_get web)"
 [ -n "$API_REPO" ] && [ -n "$WEB_REPO" ] || die "Could not read the ECR repository URLs from 'terraform output ecr_repository_urls'."
+[ "$WANT_SEARCH" = false ] || [ -n "$SEARCH_REPO" ] || die "No 'search' ECR repository. Run terraform apply, or set enable_web_search = false."
 
 # The region is whatever Terraform deployed to; AWS_REGION must agree.
 REGION="$(tf_output_raw aws_region)"
@@ -116,7 +128,7 @@ elif [ "$SKIP_BUILD" = true ] && [ -f "$TF_DIR/image.auto.tfvars" ]; then
   TAG="$(sed -nE 's/^image_tag *= *"([^"]+)".*/\1/p' "$TF_DIR/image.auto.tfvars")"
 else
   TAG="$(git -C "$ROOT" rev-parse --short=12 HEAD)"
-  if [ -n "$(git -C "$ROOT" status --porcelain -- backend frontend docs ml/models)" ]; then
+  if [ -n "$(git -C "$ROOT" status --porcelain -- backend frontend docs ml/models search)" ]; then
     TAG="$TAG-dirty-$(date +%Y%m%d%H%M%S)"
   fi
 fi
@@ -170,9 +182,23 @@ if [ "$SKIP_BUILD" = false ]; then
       --tag "$WEB_REPO:$TAG" \
       --push "$ROOT"
   fi
+
+  if [ "$WANT_SEARCH" = true ]; then
+    if image_exists "$SEARCH_REPO" "$TAG"; then
+      echo "search:$TAG is already in ECR, skipping the build."
+    else
+      say "Building and pushing search:$TAG (search/: SearXNG + our settings)"
+      docker buildx build --platform linux/arm64 --provenance=false \
+        --tag "$SEARCH_REPO:$TAG" \
+        --push "$ROOT/search"
+    fi
+  fi
 else
   image_exists "$API_REPO" "$TAG" || die "api:$TAG is not in ECR. Build it first (run without --skip-build)."
   image_exists "$WEB_REPO" "$TAG" || die "web:$TAG is not in ECR. Build it first (run without --skip-build)."
+  if [ "$WANT_SEARCH" = true ]; then
+    image_exists "$SEARCH_REPO" "$TAG" || die "search:$TAG is not in ECR. Build it first (run without --skip-build)."
+  fi
 fi
 
 # --------------------------------------------------------------- rollout ----

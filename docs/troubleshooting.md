@@ -10,10 +10,13 @@
 | "Your session expired. Refresh the page" on every action | Open the app on `http://localhost:3000`, not `127.0.0.1`: cookies from `localhost:8000` aren't sent to `127.0.0.1` |
 | The model picker is empty | The api couldn't load `LLM_MODELS_FILE`. `docker compose logs api` shows the reason (invalid JSON, missing file) |
 | "Could not reach the model server at http://ollama:11434/v1" | The Ollama container isn't running: run `make up` again. `docker compose logs ollama` shows why it stopped |
-| "Could not reach the model server at http://host.docker.internal:11434/v1" | The app is set up for the Ollama app, and it isn't open. Open Ollama, or `make model` to run models in Docker instead. On Linux, see the `OLLAMA_HOST` note in [guide 2](02-run-a-real-model-locally.md#make-answers-faster-the-ollama-app) |
+| "Could not reach the model server at http://host.docker.internal:11434/v1" | The app is set up for the Ollama app, and it isn't open. Open Ollama, or `make model` to run models in Docker instead. On Linux, see the `OLLAMA_HOST` note in [guide 2](02-run-a-real-model-locally.md#make-answers-faster-docker-model-runner) |
 | `make up` stops at "Downloading..." with an error | No internet, or a mistyped model name (check it on https://ollama.com/library). Run `make model` to choose again. A download that stopped halfway resumes |
 | The model answers with an error about memory, or `docker compose logs ollama` says `model requires more system memory` | The model doesn't fit in Docker's memory. Choose a smaller one (`make model`), or raise Docker Desktop → Settings → Resources → Memory |
-| Answers are very slow | In Docker the model runs on the CPU (Docker on macOS can't use the GPU). Use the Ollama app ([guide 2](02-run-a-real-model-locally.md#make-answers-faster-the-ollama-app)), or a smaller model |
+| "Web search failed" under an answer, or no Search button | The button needs `WEB_SEARCH_URL` (set by `docker-compose.yml`). "Failed": search engines limit automated searches; try again in a minute. `docker compose logs searxng` shows which engines refused (`too many requests`, `CAPTCHA`); SearXNG uses the ones that still answer |
+| Answers are very slow | The model runs on the CPU (`MODEL_ENGINE=ollama`; Docker on macOS can't give containers the GPU). Use Docker Model Runner: `make model` and answer yes ([guide 2](02-run-a-real-model-locally.md#make-answers-faster-docker-model-runner)), or a smaller model |
+| "Docker Model Runner is switched off" | It was turned off in Docker Desktop (Settings → AI). Turn it on, or `make model` to choose again |
+| "Could not reach the model server at http://model-runner.docker.internal/engines/v1" | Docker Model Runner stopped or was turned off. `docker model status`; then `make up` again |
 | Docker errors like `read-only file system` or `input/output error` | Docker Desktop's VM disk is in a bad state (often after sleep). Restart Docker Desktop |
 | Google button missing | `GOOGLE_CLIENT_ID` is empty. Set it in `.env`, then `docker compose up -d api` |
 | Google popup: "origin is not allowed" | Add `http://localhost:3000` (exact, no trailing slash) to the OAuth client's **Authorized JavaScript origins**; it can take a few minutes to apply |
@@ -41,6 +44,7 @@
 | **502/503** from CloudFront right after deploying | The ECS tasks are still starting or failing health checks. ECS → cluster → service → Events / Logs |
 | api logs: `Missing required environment variables` | A secret or variable wasn't injected. `terraform apply` again and check the task definition |
 | Emails never arrive | SES sandbox: you can only send to verified addresses until you request production access. Check the api logs for SES errors |
+| "Web search failed" in the chat | Look at `/ecs/<name>/searxng` in CloudWatch. Search engines limit requests from cloud IPs (`too many requests`, `CAPTCHA`); SearXNG skips those engines. If the container keeps restarting, the api task may be short of memory: raise `api_memory` |
 | `terraform destroy` hangs on the VPC / subnets | A SageMaker endpoint created by the GPU controller still exists. `./scripts/gpu.sh stop` first, then destroy again |
 
 ## Still stuck?

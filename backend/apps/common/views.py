@@ -27,5 +27,7 @@ def config_view(request: Request) -> Response:
             "email_verification": settings.EMAIL_VERIFICATION,
             "max_upload_mb": settings.MAX_UPLOAD_MB,
             "accepted_file_types": sorted(ACCEPTED_EXTENSIONS),
+            # Shows the "Search" button in the chat.
+            "web_search": bool(settings.WEB_SEARCH_URL),
         }
     )

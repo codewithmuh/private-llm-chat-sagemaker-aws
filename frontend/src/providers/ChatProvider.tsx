@@ -21,6 +21,8 @@
  *   3. Otherwise `send()` resolves as soon as the stream opens, and the
  *      events keep arriving in the background:
  *        start -> the saved user message + the empty assistant message
+ *        search  -> ("Search" on) the query being looked up on the web
+ *        sources -> the results, attached to the user message
  *        delta -> a piece of text to append
  *        done  -> the final saved assistant message
  *        error -> replaces `done`; the assistant message has status "error"
@@ -56,12 +58,22 @@ export interface SendError {
   canRetry: boolean;
 }
 
+/** The web search of the answer being written ("Search" was on). */
+export interface SearchState {
+  /** null until the server says what it searched for. */
+  query: string | null;
+  done: boolean;
+  /** The search failed; the model answers without it. */
+  error: string | null;
+}
+
 export interface Thread {
   status: "loading" | "ready" | "error";
   loadError: string | null;
   messages: Message[];
   streaming: boolean;
   sendError: SendError | null;
+  search: SearchState | null;
 }
 
 type Threads = Record<string, Thread>;
@@ -78,6 +90,7 @@ type Action =
   | { type: "remove"; id: string; messageIds: string[] }
   | { type: "streaming"; id: string; streaming: boolean }
   | { type: "send-error"; id: string; error: SendError | null }
+  | { type: "search"; id: string; search: SearchState | null }
   | { type: "drop"; id: string }
   | { type: "reset" };
 
@@ -87,6 +100,7 @@ const emptyThread = (status: Thread["status"]): Thread => ({
   messages: [],
   streaming: false,
   sendError: null,
+  search: null,
 });
 
 function updateThread(state: Threads, id: string, fn: (thread: Thread) => Thread): Threads {
@@ -139,6 +153,8 @@ function reducer(state: Threads, action: Action): Threads {
       return updateThread(state, action.id, (t) => ({ ...t, streaming: action.streaming }));
     case "send-error":
       return updateThread(state, action.id, (t) => ({ ...t, sendError: action.error }));
+    case "search":
+      return updateThread(state, action.id, (t) => ({ ...t, search: action.search }));
     case "drop": {
       const next = { ...state };
       delete next[action.id];
@@ -155,6 +171,8 @@ export interface SendInput {
   content: string;
   attachments: Attachment[];
   model: string | null;
+  /** Look the question up on the web first (the "Search" button). */
+  webSearch?: boolean;
   /** Called as soon as a new conversation exists (only when conversationId was null). */
   onCreated?: (id: string) => void;
 }
@@ -202,6 +220,8 @@ function localMessage(
     attachments,
     usage: null,
     duration_ms: null,
+    search_query: null,
+    sources: [],
     created_at: new Date().toISOString(),
   };
 }
@@ -285,6 +305,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       let finished = false;
 
       dispatch({ type: "send-error", id, error: null });
+      dispatch({ type: "search", id, search: body.web_search ? { query: null, done: false, error: null } : null });
       dispatch({ type: "add", id, messages: localUser ? [localUser, placeholder] : [placeholder] });
       dispatch({ type: "streaming", id, streaming: true });
 
@@ -314,6 +335,15 @@ export function ChatProvider({ children }: { children: ReactNode }) {
             dispatch({ type: "replace", id, messageId: assistantId, message: assistant_message });
             assistantId = assistant_message.id;
             entry.assistantId = assistant_message.id;
+            break;
+          }
+          case "search":
+            dispatch({ type: "search", id, search: { query: event.data.query, done: false, error: null } });
+            break;
+          case "sources": {
+            const { message_id, query, sources, error } = event.data;
+            dispatch({ type: "patch", id, messageId: message_id, patch: { search_query: query, sources } });
+            dispatch({ type: "search", id, search: { query, done: true, error } });
             break;
           }
           case "delta":
@@ -417,7 +447,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   );
 
   const send = useCallback(
-    async (conversationId: string | null, { content, attachments, model, onCreated }: SendInput) => {
+    async (conversationId: string | null, { content, attachments, model, webSearch, onCreated }: SendInput) => {
       let id = conversationId;
       if (!id) {
         // New chat: create the conversation first (it needs an id to stream to).
@@ -432,6 +462,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       const localUser = localMessage("user", content, attachments, model);
       const body: Record<string, unknown> = { content, attachment_ids: attachments.map((a) => a.id) };
       if (model) body.model = model;
+      if (webSearch && content.trim()) body.web_search = true;
       await startStream(id, `/api/conversations/${id}/messages/`, body, localUser);
       patchLocal(id, { updated_at: new Date().toISOString(), ...(model ? { model } : {}) });
       return id;

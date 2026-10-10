@@ -12,6 +12,8 @@ Three things make this more than a loop:
 
 1. **Attachments.** Documents become text inside <document> tags. Images go
    in as pictures if the model has vision; otherwise their OCR text is used.
+   Web search results (apps/chat/websearch.py) go in the same way, inside
+   <search_results>, numbered so the model can cite them.
 2. **The context window.** A model reads at most `context_window` tokens,
    including its own answer. When the conversation is too long we drop the
    oldest plain turns first, then trim the biggest documents, and only then
@@ -34,6 +36,7 @@ from apps.files.models import Attachment
 from apps.llm.models import LLMModel
 
 from .models import Conversation, Message
+from .websearch import results_block
 
 SYSTEM_PROMPT = (
     "You are {app_name}, a helpful assistant. Today's date is {date}. "
@@ -41,9 +44,18 @@ SYSTEM_PROMPT = (
     "inside <document> or <image> tags: base your answer on them, quote them when useful, "
     "and say so when the answer is not in them."
 )
+# Added when the prompt contains web search results.
+SEARCH_INSTRUCTIONS = (
+    "Some user messages come with web search results inside <search_results>. They are newer "
+    "than your training data: for anything that changes over time (who holds an office, prices, "
+    "news, statistics, dates), trust them over what you remember. Cite the results you use "
+    "inline with their numbers, like [1] or [2]. If they don't contain the answer, say so "
+    "instead of guessing."
+)
 # Images only for the most recent user turns: each image costs 1,000-3,000
-# tokens every time the conversation is re-sent.
+# tokens every time the conversation is re-sent. Search results likewise.
 IMAGES_FROM_LAST_N_TURNS = 2
+SEARCH_FROM_LAST_N_TURNS = 2
 CHAT_IMAGE_MAX_SIDE = 1280
 IMAGE_TOKEN_ESTIMATE = 1500
 # Tokens kept free for the chat template's own markup.
@@ -76,6 +88,7 @@ class Turn:
     documents: list[tuple[str, str]] = field(default_factory=list)  # (opening tag, text)
     images: list[str] = field(default_factory=list)  # data URIs
     has_attachments: bool = False
+    searched: bool = False  # carries web search results
 
     def tokens(self) -> int:
         doc_tokens = sum(estimate_tokens(tag + text) for tag, text in self.documents)
@@ -93,7 +106,8 @@ class Turn:
 
 
 def _tag_name(opening: str) -> str:
-    return "image" if opening.startswith("<image") else "document"
+    """'<document name="a.pdf">' -> 'document'."""
+    return re.match(r"<(\w+)", opening).group(1)
 
 
 def system_prompt(conversation: Conversation, user) -> str:
@@ -138,6 +152,7 @@ def conversation_turns(conversation: Conversation, model: LLMModel) -> list[Turn
     )
     user_turn_indexes = [i for i, m in enumerate(messages) if m.role == Message.Role.USER]
     image_turns = set(user_turn_indexes[-IMAGES_FROM_LAST_N_TURNS:])
+    search_turns = set(user_turn_indexes[-SEARCH_FROM_LAST_N_TURNS:])
 
     turns: list[Turn] = []
     for index, message in enumerate(messages):
@@ -147,6 +162,14 @@ def conversation_turns(conversation: Conversation, model: LLMModel) -> list[Turn
                 turns.append(Turn(role="assistant", text=text))
             continue
         turn = Turn(role="user", text=message.content)
+        if message.search_query and index in search_turns:
+            turn.searched = True
+            turn.documents.append(
+                (
+                    f'<search_results query="{_escape(message.search_query)}" date="{message.created_at.date()}">',
+                    results_block(message.search_query, message.sources),
+                )
+            )
         for attachment in message.attachments.all():
             turn.has_attachments = True
             image, doc = attachment_block(attachment, send_image=model.vision and index in image_turns)
@@ -167,6 +190,7 @@ def _merge_same_roles(turns: list[Turn]) -> list[Turn]:
             last.documents += turn.documents
             last.images += turn.images
             last.has_attachments = last.has_attachments or turn.has_attachments
+            last.searched = last.searched or turn.searched
         else:
             merged.append(turn)
     while merged and merged[0].role != "user":
@@ -226,6 +250,8 @@ class Prompt:
 def build_prompt(conversation: Conversation, model: LLMModel, user) -> Prompt:
     system = system_prompt(conversation, user)
     turns = conversation_turns(conversation, model)
+    if any(t.searched for t in turns):
+        system = f"{system}\n\n{SEARCH_INSTRUCTIONS}"
     window = model.context_window
     answer_budget = min(model.max_output_tokens, max(MIN_ANSWER_TOKENS, window // 2))
     budget = window - answer_budget - TEMPLATE_OVERHEAD

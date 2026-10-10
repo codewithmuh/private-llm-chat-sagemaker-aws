@@ -35,7 +35,8 @@ def mock_answer(request: ChatRequest) -> str:
     system = next((m for m in messages if m.get("role") == "system"), None)
     last_user = next((m for m in reversed(messages) if m.get("role") == "user"), {"content": ""})
     text, images, documents = _text_of(last_user.get("content"))
-    question = re.sub(r"<document.*?</document>", "", text, flags=re.DOTALL).strip()
+    search = re.search(r'<search_results query="([^"]*)"[^>]*>(.*?)</search_results>', text, re.DOTALL)
+    question = re.sub(r"<(document|search_results).*?</\1>", "", text, flags=re.DOTALL).strip()
 
     lowered = question.lower()
     if lowered.startswith("transcribe all text"):
@@ -60,6 +61,9 @@ def mock_answer(request: ChatRequest) -> str:
     ]
     if documents:
         lines.append(f"- Documents attached: {', '.join(f'`{d}`' for d in documents)}")
+    if search:
+        found = len(re.findall(r"^\[\d+\] ", search.group(2), re.MULTILINE))
+        lines.append(f"- Web search results: **{found}** (searched for _{search.group(1)}_), cite them like [1]")
     if images:
         lines.append(f"- Images attached: **{images}** (sent as base64 `image_url` parts)")
     lines += [

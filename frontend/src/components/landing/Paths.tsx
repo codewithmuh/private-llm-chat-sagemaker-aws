@@ -12,7 +12,7 @@ const LEVELS = [
   },
   {
     title: "More models, faster",
-    text: "Switch models, and use your Mac's or PC's GPU with the Ollama app.",
+    text: "Switch models, and run them on your Mac's or PC's GPU with Docker Model Runner.",
     time: "10 min",
     cost: "free",
     href: "/docs/02-run-a-real-model-locally",

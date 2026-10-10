@@ -20,9 +20,14 @@ All notable changes to this project are documented here. The format follows
   SageMaker).
 - Docker Compose for local development, with Mailpit and an optional Ollama profile.
 - `make up` runs a real open-source model locally: the first time it asks which model
-  (Qwen3-VL, Gemma 3, Llama 3.2, Qwen3...), downloads it with Ollama, writes
+  (Qwen3-VL, Gemma 3, Llama 3.2, Qwen3...), downloads it, writes
   `config/models.local.json`, and checks that the model answers. `make model` switches
-  models. It uses the Ollama app when it's running (GPU), else Ollama in Docker.
+  models. It runs them on the GPU with Docker Model Runner (part of Docker Desktop; it
+  asks before turning it on), else in Ollama in Docker (CPU).
+- Web search: a **Search** button in the chat. The api looks the question up with
+  SearXNG (`search/`, self-hosted, no API key; a compose service locally and a sidecar
+  container in the api task on AWS, `enable_web_search`), reads the top pages, and
+  the model answers from them with numbered citations and a sources list.
 - `RUN_LOCALLY.md`: a step-by-step guide for beginners, from installing Docker to chatting.
 
 ### Removed

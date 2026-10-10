@@ -1,11 +1,12 @@
 "use client";
 
 import { memo, useMemo } from "react";
-import { Check, CircleAlert, CircleStop, Copy, RefreshCw } from "lucide-react";
+import { Check, CircleAlert, CircleStop, Copy, Globe, RefreshCw } from "lucide-react";
 import { useCopy } from "@/hooks/useCopy";
 import { formatDuration } from "@/lib/format";
 import { splitThinking } from "@/lib/thinking";
-import type { Message } from "@/lib/types";
+import type { Message, Source } from "@/lib/types";
+import type { SearchState } from "@/providers/ChatProvider";
 import { Markdown } from "./Markdown";
 import { MessageAttachments } from "./MessageAttachments";
 import { Thinking } from "./Thinking";
@@ -19,6 +20,51 @@ interface MessageItemProps {
   busy: boolean;
   modelName?: string;
   onRegenerate: () => void;
+  /** Assistant messages: the web results the question was sent with. */
+  sources?: Source[];
+  /** The last assistant message, while "Search" runs for it. */
+  search?: SearchState | null;
+}
+
+/** "[2]" in the answer becomes a link to source 2 (when there is one). */
+function linkCitations(text: string, sources: Source[] | undefined): string {
+  if (!sources?.length) return text;
+  return text.replace(/\[(\d{1,2})\](?!\()/g, (match, n: string) => {
+    const source = sources[Number(n) - 1];
+    return source ? `[[${n}]](<${source.url}>)` : match;
+  });
+}
+
+function hostOf(url: string): string {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return url;
+  }
+}
+
+function Sources({ sources }: { sources: Source[] }) {
+  return (
+    <div className={styles.sources}>
+      <span className={styles.sourcesLabel}>Sources</span>
+      <ol className={styles.sourcesList}>
+        {sources.map((source, index) => (
+          <li key={source.url}>
+            <a
+              className={styles.source}
+              href={source.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              title={source.title}
+            >
+              <span className={styles.sourceNumber}>{index + 1}</span>
+              <span className={styles.sourceText}>{hostOf(source.url)}</span>
+            </a>
+          </li>
+        ))}
+      </ol>
+    </div>
+  );
 }
 
 function CopyButton({ text }: { text: string }) {
@@ -44,6 +90,8 @@ export const MessageItem = memo(function MessageItem({
   busy,
   modelName,
   onRegenerate,
+  sources,
+  search,
 }: MessageItemProps) {
   const streaming = message.status === "streaming";
   // Reasoning models: split "<think>…</think>" from the answer.
@@ -54,6 +102,7 @@ export const MessageItem = memo(function MessageItem({
         : { thinking: null, thinkingOpen: false, answer: message.content },
     [message.role, message.content, streaming],
   );
+  const linkedAnswer = useMemo(() => linkCitations(answer, sources), [answer, sources]);
 
   if (message.role === "user") {
     return (
@@ -80,19 +129,44 @@ export const MessageItem = memo(function MessageItem({
   return (
     <div className={styles.assistant} data-last={isLast || undefined}>
       {streaming && !message.content ? (
-        <div className={styles.thinking} aria-label="Thinking">
-          <span />
-          <span />
-          <span />
-        </div>
+        <>
+          {search && !search.done && (
+            <div className={styles.searching} role="status">
+              <Globe size={15} aria-hidden />
+              <span>
+                Searching the web
+                {search.query && (
+                  <>
+                    {" "}
+                    for <strong>{search.query}</strong>
+                  </>
+                )}
+                …
+              </span>
+            </div>
+          )}
+          <div className={styles.thinking} aria-label="Thinking">
+            <span />
+            <span />
+            <span />
+          </div>
+        </>
       ) : (
         <>
           {thinking !== null && (thinking || (streaming && thinkingOpen)) && (
             <Thinking text={thinking} inProgress={streaming && thinkingOpen} />
           )}
-          {answer && <Markdown content={answer} streaming={streaming && !thinkingOpen} />}
+          {answer && <Markdown content={linkedAnswer} streaming={streaming && !thinkingOpen} />}
         </>
       )}
+
+      {search?.done && search.error && (
+        <p className={styles.note}>
+          <CircleAlert size={14} aria-hidden /> {search.error}
+        </p>
+      )}
+
+      {sources && sources.length > 0 && <Sources sources={sources} />}
 
       {message.status === "stopped" && (
         <p className={styles.note}>

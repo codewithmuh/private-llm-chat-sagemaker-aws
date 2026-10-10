@@ -43,20 +43,26 @@ it, checks that it answers, and prints where to open the app:
 > Port already in use? Change `WEB_PORT`, `API_PORT`, `MAILPIT_PORT` or `OLLAMA_PORT`
 > in `.env` and run `make up` again.
 
-More about the models, switching (`make model`), and making answers faster with the
-Ollama app: [guide 2](02-run-a-real-model-locally.md).
+On a Mac with Apple silicon or a PC with an NVIDIA card, `make up` first offers to
+turn on **Docker Model Runner** (part of Docker Desktop), which runs the model on the
+GPU. Say yes: it is several times faster. More about the models, switching
+(`make model`) and the engines: [guide 2](02-run-a-real-model-locally.md).
 
 ## Try it
 
 1. **Sign up** at http://localhost:3000. The app emails you a 6-digit code: open
    **Mailpit** (http://localhost:8025), copy the code, paste it in.
-2. **Chat.** Ask anything, then a follow-up. The answer streams in word by word. In
-   Docker the model runs on your CPU, so expect a few words per second.
+2. **Chat.** Ask anything, then a follow-up. The answer streams in word by word.
+   Without Model Runner the model runs on your CPU: expect a few words per second.
 3. **Attach a file**: a PDF, a Word document, a text file or an image. Ask about it.
    Documents are pasted into the prompt as text; images go to the model as pictures.
-4. **OCR**: open the OCR tool from the menu and drop in a screenshot or a photo of a
+4. **Search the web**: turn on **Search** next to the paperclip and ask something
+   recent. The app looks it up with SearXNG (a search engine running in Docker, at
+   http://localhost:8888), and the model answers from the pages with [1], [2]
+   citations. How it works: [architecture](architecture.md#web-search-answers-newer-than-the-model).
+5. **OCR**: open the OCR tool from the menu and drop in a screenshot or a photo of a
    page. The vision model reads the text.
-5. **Turn on two-factor authentication** in Settings → Security, with an authenticator
+6. **Turn on two-factor authentication** in Settings → Security, with an authenticator
    app (Google Authenticator, 1Password, Authy...) or email codes. Log out and back in.
 
 ## Become an admin
@@ -78,7 +84,8 @@ browser ──► web (Next.js :3000)
    │
    └──────► api (Django :8000) ──► postgres
                  │   │
-                 │   └──► mailpit (catches all email)
+                 │   ├──► mailpit (catches all email)
+                 │   └──► searxng (:8888, the web search behind the "Search" button)
                  └──────► ollama (:11434, runs the model, speaks the OpenAI API like vLLM)
 ```
 
