@@ -72,6 +72,18 @@ variable "search_image" {
   default     = ""
 }
 
+variable "speech_to_text" {
+  description = "Run the Whisper container (speech_image) next to the api. A plain bool, like web_search."
+  type        = bool
+  default     = false
+}
+
+variable "speech_image" {
+  description = "Full image URI of the Whisper image (speech/), when speech_to_text is on."
+  type        = string
+  default     = ""
+}
+
 variable "search_secret" {
   description = "Secrets Manager reference (\"<arn>:<json key>::\") for SEARXNG_SECRET."
   type        = string

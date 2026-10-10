@@ -206,7 +206,7 @@ the model you chose. You don't need to change it now.
 docker compose ps
 ```
 
-You should see `api`, `mailpit`, `mock-llm`, `postgres`, `searxng` and `web`, all
+You should see `api`, `mailpit`, `mock-llm`, `postgres`, `searxng`, `web` and `whisper`, all
 with a STATUS starting with `Up`, plus `ollama` if the AI runs in a container. (With
 Docker Model Runner the AI isn't in this list: Docker Desktop runs it. Check it with
 `docker model ps`.)
@@ -247,6 +247,10 @@ You're in.
 - **Ask a follow-up.** The model remembers the conversation.
 - **Attach a file:** click the paperclip next to the message box and pick a PDF, Word
   document, text file or image. Then ask about it, for example "Summarize this".
+- **Talk instead of typing:** click the **microphone** next to the send button and
+  allow the microphone when your browser asks (only the first time). Speak, then
+  click the red button: your words appear in the message box, ready to edit and
+  send. Whisper turns them into text right here on your computer, in any language.
 - **Search the web:** click **Search** next to the paperclip (it turns green), then ask
   something recent, like "Who is the prime minister of Pakistan?". The app looks it
   up first, the model answers from the pages it found, and the sources are listed
@@ -326,6 +330,7 @@ The admin panel lists users and conversations, and lets you add AI models.
 | Windows: the `api` keeps restarting, and `docker compose logs api` shows `exec /app/docker-entrypoint.sh: no such file or directory` | Git changed the line endings. Delete the project folder, clone it again with `--config core.autocrlf=false` ([step 2](#step-2-download-the-code)), then do step 3 again |
 | The page says **"Not found. Try again"** or **"Can't reach the server"** | The app isn't running, or is still starting. Run the start command, wait for **Ready!**, then refresh |
 | "Your session expired. Refresh the page" on every click | You opened `127.0.0.1`. Use http://localhost:3000 instead |
+| The microphone button does nothing, or says the browser blocked it | Allow the microphone for the site: click the icon at the left of the address bar. It only works on `http://localhost`, not on `127.0.0.1` or another address |
 | The verification email never arrives | It never goes to your real inbox. Open Mailpit: http://localhost:8025 |
 | The password is rejected | Use at least 8 characters, not only numbers, not a common password, and not too close to your email |
 | `no space left on device` | Free some disk space. `docker system prune` deletes old Docker downloads you no longer use |

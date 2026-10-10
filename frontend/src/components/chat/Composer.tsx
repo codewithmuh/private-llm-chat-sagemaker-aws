@@ -10,6 +10,8 @@
  *   `addFiles` through the ref), or paste a screenshot. They upload at once.
  * - Search: when the server has web search, a toggle next to the paperclip.
  *   While it is on, every message is looked up on the web before the answer.
+ * - Microphone: when the server has speech to text, click to dictate, click
+ *   again to stop. The words land in the box (lib/speech.ts) to edit and send.
  * - While an answer streams, the Send button becomes Stop.
  */
 import {
@@ -19,16 +21,18 @@ import {
   useLayoutEffect,
   useRef,
   useState,
+  useSyncExternalStore,
   type ClipboardEvent,
   type FormEvent,
   type KeyboardEvent,
   type Ref,
 } from "react";
-import { ArrowUp, Globe, Paperclip, Square } from "lucide-react";
+import { ArrowUp, Globe, Mic, Paperclip, Square, X } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
 import { errorMessage } from "@/lib/api";
 import { takeComposerHandoff } from "@/lib/browser";
 import { renamePastedFile } from "@/lib/files";
+import { canRecord, MAX_RECORDING_SECONDS, startRecording, toWav, transcribe, type Recording } from "@/lib/speech";
 import type { Attachment, Model } from "@/lib/types";
 import { useConfig } from "@/providers/ConfigProvider";
 import { FOCUS_COMPOSER_EVENT } from "@/components/shell/AppShell";
@@ -52,6 +56,14 @@ interface ComposerProps {
   onStop: () => void;
 }
 
+type Voice = "idle" | "recording" | "transcribing";
+
+const noSubscribe = () => () => {};
+
+function formatSeconds(seconds: number): string {
+  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
+}
+
 export function Composer({ ref, conversationId, model, streaming, onSend, onStop }: ComposerProps) {
   const { config } = useConfig();
   const toast = useToast();
@@ -61,6 +73,11 @@ export function Composer({ ref, conversationId, model, streaming, onSend, onStop
   const [text, setText] = useState(handoff?.text ?? "");
   const [sending, setSending] = useState(false);
   const [webSearch, setWebSearch] = useState(false);
+  const [voice, setVoice] = useState<Voice>("idle");
+  const [seconds, setSeconds] = useState(0);
+  const recording = useRef<Recording | null>(null);
+  // Only in a browser with a microphone API (false while rendering on the server).
+  const micSupported = useSyncExternalStore(noSubscribe, canRecord, () => false);
   const uploads = useUploads(handoff?.attachments);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -112,7 +129,64 @@ export function Composer({ ref, conversationId, model, streaming, onSend, onStop
   }, [focus]);
 
   const content = text.trim();
-  const canSend = !streaming && !sending && !uploads.uploading && (content.length > 0 || uploads.ready.length > 0);
+  const canSend =
+    !streaming && !sending && voice === "idle" && !uploads.uploading && (content.length > 0 || uploads.ready.length > 0);
+
+  const stopDictation = useCallback(async () => {
+    const current = recording.current;
+    if (!current) return;
+    recording.current = null;
+    setVoice("transcribing");
+    try {
+      const said = (await transcribe(await toWav(await current.stop()))).trim();
+      if (said) {
+        setText((typed) => (typed.trim() ? `${typed.trimEnd()} ${said}` : said));
+      } else {
+        toast.info("Didn't catch that. Try again, a little closer to the microphone.");
+      }
+    } catch (error) {
+      toast.error(errorMessage(error, "Couldn't turn your voice into text."));
+    } finally {
+      setVoice("idle");
+      textareaRef.current?.focus();
+    }
+  }, [toast]);
+
+  const startDictation = async () => {
+    try {
+      recording.current = await startRecording();
+    } catch (error) {
+      const reason = error instanceof DOMException ? error.name : "";
+      toast.error(
+        reason === "NotAllowedError"
+          ? "The browser blocked the microphone. Allow it for this site (the icon in the address bar), then try again."
+          : reason === "NotFoundError"
+            ? "No microphone found."
+            : "Couldn't start the microphone. Is another app using it?",
+      );
+      return;
+    }
+    setSeconds(0);
+    setVoice("recording");
+  };
+
+  const cancelDictation = () => {
+    recording.current?.cancel();
+    recording.current = null;
+    setVoice("idle");
+  };
+
+  // The recording timer, and a stop at MAX_RECORDING_SECONDS.
+  useEffect(() => {
+    if (voice !== "recording") return;
+    const timer = window.setInterval(() => setSeconds((s) => s + 1), 1000);
+    return () => window.clearInterval(timer);
+  }, [voice]);
+  useEffect(() => {
+    if (voice === "recording" && seconds >= MAX_RECORDING_SECONDS) void stopDictation();
+  }, [voice, seconds, stopDictation]);
+  // Leaving the chat mid-recording: release the microphone.
+  useEffect(() => () => recording.current?.cancel(), []);
 
   const submit = async () => {
     if (!canSend) return;
@@ -236,8 +310,44 @@ export function Composer({ ref, conversationId, model, streaming, onSend, onStop
           </button>
         )}
 
-        {model && !model.vision && hasImages && (
-          <span className={styles.hint}>Images are converted to text for this model</span>
+        {voice === "recording" ? (
+          <span className={styles.recording} role="status">
+            <span className={styles.recordingDot} aria-hidden />
+            Listening {formatSeconds(seconds)}
+            <button
+              type="button"
+              className="icon-btn icon-btn-sm"
+              onClick={cancelDictation}
+              aria-label="Cancel recording"
+              title="Cancel"
+            >
+              <X size={15} aria-hidden />
+            </button>
+          </span>
+        ) : (
+          model &&
+          !model.vision &&
+          hasImages && <span className={styles.hint}>Images are converted to text for this model</span>
+        )}
+
+        {config.speech_to_text && micSupported && (
+          <button
+            type="button"
+            className={`icon-btn ${styles.mic}`}
+            data-state={voice}
+            onClick={() => (voice === "recording" ? void stopDictation() : void startDictation())}
+            disabled={voice === "transcribing" || streaming}
+            aria-label={voice === "recording" ? "Stop and transcribe" : "Dictate a message"}
+            title={voice === "recording" ? "Stop" : voice === "transcribing" ? "Transcribing…" : "Dictate"}
+          >
+            {voice === "transcribing" ? (
+              <span className="spinner" aria-hidden />
+            ) : voice === "recording" ? (
+              <Square size={13} fill="currentColor" aria-hidden />
+            ) : (
+              <Mic size={19} aria-hidden />
+            )}
+          </button>
         )}
 
         {streaming ? (

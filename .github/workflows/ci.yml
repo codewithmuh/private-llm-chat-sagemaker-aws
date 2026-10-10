@@ -110,3 +110,8 @@ jobs:
         with:
           context: search
           push: false
+      - name: speech
+        uses: docker/build-push-action@v6
+        with:
+          context: speech
+          push: false

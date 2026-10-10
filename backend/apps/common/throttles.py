@@ -28,3 +28,7 @@ class UploadThrottle(UserRateThrottle):
 
 class OcrThrottle(UserRateThrottle):
     scope = "ocr"
+
+
+class SpeechThrottle(UserRateThrottle):
+    scope = "speech"

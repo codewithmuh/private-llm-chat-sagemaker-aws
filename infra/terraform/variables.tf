@@ -176,6 +176,17 @@ variable "enable_web_search" {
   default     = true
 }
 
+variable "enable_speech_to_text" {
+  description = <<-EOT
+    The chat's microphone button: run Whisper (speech/, whisper.cpp, built and
+    pushed by scripts/deploy.sh) as another container in the api task, on its
+    CPU, reachable only by the api at http://localhost:9000. Voice never leaves
+    your account. About 300-500 MiB of the api task's memory.
+  EOT
+  type        = bool
+  default     = true
+}
+
 variable "extra_environment" {
   description = <<-EOT
     Extra environment variables for the api and gpu-controller containers, for
@@ -233,9 +244,9 @@ variable "api_cpu" {
 }
 
 variable "api_memory" {
-  description = "api task memory in MiB."
+  description = "api task memory in MiB: the api, plus SearXNG and Whisper when they are on."
   type        = number
-  default     = 1024
+  default     = 2048
 }
 
 variable "api_desired_count" {

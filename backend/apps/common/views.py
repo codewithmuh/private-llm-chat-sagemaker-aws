@@ -29,5 +29,7 @@ def config_view(request: Request) -> Response:
             "accepted_file_types": sorted(ACCEPTED_EXTENSIONS),
             # Shows the "Search" button in the chat.
             "web_search": bool(settings.WEB_SEARCH_URL),
+            # Shows the microphone button.
+            "speech_to_text": bool(settings.SPEECH_TO_TEXT_URL),
         }
     )

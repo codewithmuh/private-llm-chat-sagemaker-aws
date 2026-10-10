@@ -17,7 +17,7 @@ With the defaults (`enable_nat_gateway = false`, one task per service):
 | Item | Sizing | Rate | ≈ per month |
 |---|---|---|---|
 | Application Load Balancer | 1 ALB, light traffic | $0.0225/hour + $0.008 per LCU-hour | $17–20 |
-| Fargate `api` (ARM64) | 0.5 vCPU, 1 GB | $0.03238 per vCPU-hour + $0.00356 per GB-hour | $14.40 |
+| Fargate `api` (ARM64) | 0.5 vCPU, 2 GB (the api, SearXNG and Whisper) | $0.03238 per vCPU-hour + $0.00356 per GB-hour | $17.00 |
 | Fargate `web` (ARM64) | 0.25 vCPU, 0.5 GB | same | $7.20 |
 | Fargate `gpu-controller` (ARM64) | 0.25 vCPU, 0.5 GB | same | $7.20 |
 | Public IPv4 addresses | 2 for the ALB + 1 per task (3) | $0.005 per address-hour | $18.25 |

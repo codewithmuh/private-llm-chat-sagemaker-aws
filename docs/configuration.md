@@ -80,6 +80,12 @@ Because the browser sees a single origin, cookies and CSRF need no cross-origin 
 | `WEB_SEARCH_RESULTS` | `5` | Search results put in the prompt |
 | `WEB_SEARCH_PAGES` | `3` | How many of them are opened and read (the others give only their snippet). Each adds about 800 tokens to the prompt |
 | `WEB_SEARCH_TIMEOUT_SECONDS` | `8` | Per request: the search itself, and each page |
+| `SPEECH_TO_TEXT_URL` | `""` | Base URL of a server with OpenAI's transcription API (`POST /v1/audio/transcriptions`), for the microphone button. Empty hides it. Local: `http://whisper:9000` (whisper.cpp, `speech/`); AWS: `http://localhost:9000` (`enable_speech_to_text`). `https://api.openai.com` works too, with a key, but then voice leaves your account |
+| `SPEECH_TO_TEXT_MODEL` | `whisper-1` | Sent as `model`. whisper.cpp ignores it (its model is built into the image) |
+| `SPEECH_TO_TEXT_API_KEY` | `""` | Only for a hosted service |
+| `SPEECH_TO_TEXT_LANGUAGE` | `""` | Empty = detect the language. Or an ISO code (`en`, `ur`...) to force one |
+| `SPEECH_TO_TEXT_TIMEOUT_SECONDS` | `120` | |
+| `SPEECH_MAX_MB` | `10` | Largest recording accepted (16 kHz WAV: about 5 minutes) |
 | `GPU_CONTROLLER_INTERVAL` | `30` | Seconds between controller ticks |
 
 #### `LLM_MODELS` entries
@@ -164,6 +170,7 @@ repository root. Start from `.env.example`.
 | Variable | Default | Notes |
 |---|---|---|
 | `WEB_PORT` `API_PORT` `MAILPIT_PORT` `SEARCH_PORT` `OLLAMA_PORT` | `3000` `8000` `8025` `8888` `11434` | Ports on your machine. Change one when another program already uses it |
+| `WHISPER_MODEL` | `base` | The Whisper model built into the speech image: `base` (142 MB, quick), `small` (466 MB, more accurate, slower), or any from [ggerganov/whisper.cpp](https://huggingface.co/ggerganov/whisper.cpp). Rebuild after changing it (`make up`) |
 | `SEARXNG_SECRET` | dev-only value | The search engine's secret key (any long random string). On AWS, Terraform generates it |
 | `MODEL_ENGINE` | `""` | Where the model runs: `docker-model-runner` (Docker Desktop's Model Runner, on the GPU), `ollama` (a container, CPU only) or `ollama-app`. Empty = `make up` picks (and asks before turning Model Runner on) |
 | `LOCAL_MODEL` | `""` | The model's name in that engine (e.g. `ai/qwen3-vl:8B`, `qwen3-vl:4b-instruct`), or `mock`. Empty = `make up` asks. `make model` changes both |

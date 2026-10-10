@@ -138,6 +138,10 @@
 # the api task. Turn it off to keep every request inside AWS.
 # enable_web_search = true
 
+# Speech to text (the chat's microphone button): Whisper runs as another
+# container in the api task, on its CPU. Voice never leaves your account.
+# enable_speech_to_text = true
+
 # Advanced: no internet at all for the model containers (weights from S3 only).
 # sagemaker_vpc_isolated = false
 
@@ -148,7 +152,7 @@
 # ================================================================ sizing ====
 
 # api_cpu = 512     # 0.5 vCPU
-# api_memory = 1024
+# api_memory = 2048  # the api + SearXNG + Whisper
 # api_desired_count = 1
 # web_cpu = 256
 # web_memory = 512

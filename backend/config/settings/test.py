@@ -44,5 +44,6 @@ REST_FRAMEWORK = {  # noqa: F405
         "chat": "1000/min",
         "upload": "1000/min",
         "ocr": "1000/min",
+        "speech": "1000/min",
     },
 }

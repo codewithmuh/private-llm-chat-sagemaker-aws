@@ -56,13 +56,15 @@ GPU. Say yes: it is several times faster. More about the models, switching
    Without Model Runner the model runs on your CPU: expect a few words per second.
 3. **Attach a file**: a PDF, a Word document, a text file or an image. Ask about it.
    Documents are pasted into the prompt as text; images go to the model as pictures.
-4. **Search the web**: turn on **Search** next to the paperclip and ask something
+4. **Talk**: click the microphone, speak, click again. Whisper (in Docker, on your
+   CPU) turns it into text in the message box; the audio never leaves your computer.
+5. **Search the web**: turn on **Search** next to the paperclip and ask something
    recent. The app looks it up with SearXNG (a search engine running in Docker, at
    http://localhost:8888), and the model answers from the pages with [1], [2]
    citations. How it works: [architecture](architecture.md#web-search-answers-newer-than-the-model).
-5. **OCR**: open the OCR tool from the menu and drop in a screenshot or a photo of a
+6. **OCR**: open the OCR tool from the menu and drop in a screenshot or a photo of a
    page. The vision model reads the text.
-6. **Turn on two-factor authentication** in Settings → Security, with an authenticator
+7. **Turn on two-factor authentication** in Settings → Security, with an authenticator
    app (Google Authenticator, 1Password, Authy...) or email codes. Log out and back in.
 
 ## Become an admin
@@ -85,7 +87,8 @@ browser ──► web (Next.js :3000)
    └──────► api (Django :8000) ──► postgres
                  │   │
                  │   ├──► mailpit (catches all email)
-                 │   └──► searxng (:8888, the web search behind the "Search" button)
+                 │   ├──► searxng (:8888, the web search behind the "Search" button)
+                 │   └──► whisper (speech to text, behind the microphone button)
                  └──────► ollama (:11434, runs the model, speaks the OpenAI API like vLLM)
 ```
 

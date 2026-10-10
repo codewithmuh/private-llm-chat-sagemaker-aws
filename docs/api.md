@@ -84,14 +84,16 @@ to change these.
   "email_verification": "mandatory",
   "max_upload_mb": 20,
   "accepted_file_types": [".pdf", ".docx", ".txt", ".md", ".csv", ".json", ".png", ".jpg", ".jpeg", ".webp", ".gif"],
-  "web_search": true
+  "web_search": true,
+  "speech_to_text": true
 }
 ```
 
 `google_client_id` is `null` when Google sign-in is not configured. Hide the
 button in that case. `email_verification` is `"mandatory"`, `"optional"` or `"none"`.
 `web_search` is `true` when the server can search the web (`WEB_SEARCH_URL` is
-set): show the "Search" button.
+set): show the "Search" button. `speech_to_text` is `true` when it can turn speech
+into text (`SPEECH_TO_TEXT_URL`): show the microphone button.
 
 ---
 
@@ -439,6 +441,26 @@ Default limit: 20 MB.
 
 ---
 
+## Speech to text — `/api/speech/`
+
+### `POST /api/speech/transcribe/`
+
+The microphone button: a recording in, its text out. Multipart form, field
+`audio`: a WAV file (the web app records the microphone and converts it to 16 kHz
+mono WAV in the browser, `frontend/src/lib/speech.ts`). Up to `SPEECH_MAX_MB`
+(10 MB, about 5 minutes).
+
+```json
+{ "text": "Who is the prime minister of Pakistan?" }
+```
+
+`text` is `""` when nothing was said. Errors: `400` no `audio` field, `413`
+too large, `415` not audio, `502 speech_failed` (the Whisper server failed),
+`503 speech_unavailable` (no `SPEECH_TO_TEXT_URL`). Nothing is stored: the
+recording is forwarded to Whisper and forgotten.
+
+---
+
 ## Rate limits
 
 Per client IP for anonymous endpoints, per user otherwise. The defaults are in
@@ -451,3 +473,4 @@ Per client IP for anonymous endpoints, per user otherwise. The defaults are in
 | `chat` (send / regenerate) | 60/min |
 | `upload` | 120/hour |
 | `ocr` | 30/hour |
+| `speech` (microphone) | 60/hour |

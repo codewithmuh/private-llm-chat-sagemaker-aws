@@ -193,6 +193,10 @@ the model it started with.
 - Files live in a **private** bucket; the browser gets 5-minute presigned links.
 - The Django admin shows conversation **metadata only**, not message text.
 - Everything (model, database, files) stays in **your** AWS account and region.
+- **Voice stays in your infrastructure.** The microphone's recordings go to
+  Whisper in a container next to the api (`speech/`), are transcribed, and are
+  not stored. (Browsers' built-in speech recognition would send them to Google
+  or Apple instead.)
 - **Web search is opt-in per message.** Only then does a search query (and
   requests for the result pages) leave your account; turn it off entirely with
   `enable_web_search = false`.

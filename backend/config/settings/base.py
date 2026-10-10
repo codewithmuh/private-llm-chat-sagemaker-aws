@@ -104,6 +104,7 @@ INSTALLED_APPS = [
     "apps.llm",
     "apps.files",
     "apps.chat",
+    "apps.speech",
 ]
 
 MIDDLEWARE = [
@@ -264,6 +265,17 @@ WEB_SEARCH_RESULTS = env_int("WEB_SEARCH_RESULTS", 5)
 # How many of the results to open and read, not just their snippet.
 WEB_SEARCH_PAGES = env_int("WEB_SEARCH_PAGES", 3)
 WEB_SEARCH_TIMEOUT_SECONDS = env_int("WEB_SEARCH_TIMEOUT_SECONDS", 8)
+
+# Speech to text (the microphone button in the chat): the base URL of a server
+# with OpenAI's transcription API, e.g. whisper.cpp (speech/ in this repo).
+# Empty = the button is hidden.
+SPEECH_TO_TEXT_URL = env("SPEECH_TO_TEXT_URL").rstrip("/")
+SPEECH_TO_TEXT_MODEL = env("SPEECH_TO_TEXT_MODEL", "whisper-1")  # whisper.cpp ignores it
+SPEECH_TO_TEXT_API_KEY = env("SPEECH_TO_TEXT_API_KEY")  # only for a hosted service
+# Empty = detect the language. Or an ISO code like "en" or "ur".
+SPEECH_TO_TEXT_LANGUAGE = env("SPEECH_TO_TEXT_LANGUAGE")
+SPEECH_TO_TEXT_TIMEOUT_SECONDS = env_int("SPEECH_TO_TEXT_TIMEOUT_SECONDS", 120)
+SPEECH_MAX_MB = env_int("SPEECH_MAX_MB", 10)
 # Seconds between words for the in-process mock model (0 in tests).
 MOCK_LLM_DELAY = float(env("MOCK_LLM_DELAY", "0.02"))
 
@@ -288,6 +300,7 @@ REST_FRAMEWORK = {
         "chat": env("THROTTLE_CHAT", "60/min"),
         "upload": env("THROTTLE_UPLOAD", "120/hour"),
         "ocr": env("THROTTLE_OCR", "30/hour"),
+        "speech": env("THROTTLE_SPEECH", "60/hour"),
     },
     # How many proxies sit in front of Django. DRF uses it to pick the real
     # client IP out of X-Forwarded-For for rate limiting. On AWS it is 2

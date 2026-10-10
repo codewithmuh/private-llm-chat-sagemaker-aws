@@ -10,6 +10,8 @@
 #   searxng         (web_search = true) The web search behind the chat's
 #                   "Search" button: a second container in the api task, so the
 #                   api reaches it at http://localhost:8080. Never exposed.
+#   whisper         (speech_to_text = true) Speech to text for the microphone
+#                   button, in the api task too: http://localhost:9000.
 #
 # All three run on ARM64 (Graviton): about 20% cheaper than x86 on Fargate.
 # The images MUST be built for linux/arm64 (scripts/deploy.sh does this). An
@@ -25,7 +27,11 @@ locals {
     for k in sort(keys(var.django_secrets)) : { name = k, valueFrom = var.django_secrets[k] }
   ]
 
-  log_groups = concat(["api", "web", "gpu-controller"], var.web_search ? ["searxng"] : [])
+  log_groups = concat(
+    ["api", "web", "gpu-controller"],
+    var.web_search ? ["searxng"] : [],
+    var.speech_to_text ? ["whisper"] : [],
+  )
 
   # One helper for the log settings every container shares.
   log_config = {
@@ -114,6 +120,17 @@ resource "aws_ecs_task_definition" "api" {
       # A soft reservation inside the task's memory (api_memory).
       memoryReservation = 256
       logConfiguration  = local.log_config["searxng"]
+    }] : [],
+    # Speech to text, also next to the api: http://localhost:9000. Not
+    # essential either: without it, only the microphone button stops working.
+    var.speech_to_text ? [{
+      name              = "whisper"
+      image             = var.speech_image
+      essential         = false
+      restartPolicy     = { enabled = true, restartAttemptPeriod = 60 }
+      environment       = [{ name = "WHISPER_THREADS", value = "2" }] # the task's vCPUs, roughly
+      memoryReservation = 384
+      logConfiguration  = local.log_config["whisper"]
     }] : [],
   ))
 }

@@ -80,6 +80,7 @@ module "ecr" {
   repositories = concat(
     ["api", "web"],
     var.enable_web_search ? ["search"] : [],
+    var.enable_speech_to_text ? ["speech"] : [],
     var.enable_vllm_router_repo ? ["vllm-router"] : [],
   )
   force_delete   = !local.is_prod
@@ -239,8 +240,9 @@ locals {
 
       LLM_MODELS = jsonencode(local.llm_models)
 
-      # The search container shares the api task's network: localhost.
-      WEB_SEARCH_URL = var.enable_web_search ? "http://localhost:8080" : ""
+      # The search and speech containers share the api task's network: localhost.
+      WEB_SEARCH_URL     = var.enable_web_search ? "http://localhost:8080" : ""
+      SPEECH_TO_TEXT_URL = var.enable_speech_to_text ? "http://localhost:9000" : ""
     },
     var.extra_environment,
   )
@@ -282,6 +284,9 @@ module "ecs" {
   web_search    = var.enable_web_search
   search_image  = var.enable_web_search ? "${module.ecr.repository_urls["search"]}:${coalesce(var.image_tag, "not-built-yet")}" : ""
   search_secret = var.enable_web_search ? "${aws_secretsmanager_secret_version.app.secret_arn}:SEARXNG_SECRET::" : ""
+
+  speech_to_text = var.enable_speech_to_text
+  speech_image   = var.enable_speech_to_text ? "${module.ecr.repository_urls["speech"]}:${coalesce(var.image_tag, "not-built-yet")}" : ""
 
   django_environment = local.django_environment
   django_secrets     = local.django_secrets

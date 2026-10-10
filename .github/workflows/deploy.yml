@@ -1,4 +1,4 @@
-# Build the api, web and search images and deploy them to AWS.
+# Build the api, web, search and speech images and deploy them to AWS.
 #
 # OFF by default, so forks and fresh clones do not fail on every push. Turn it on:
 #   1. terraform apply with enable_github_oidc = true and github_repository = "<owner>/<repo>"
@@ -115,11 +115,19 @@ jobs:
             file: search/Dockerfile
             target: ""
             build_args: ""
+          - component: speech
+            # whisper.cpp + the Whisper model, for the microphone button. Set
+            # the repository variable SPEECH_TO_TEXT=false if you deploy with
+            # enable_speech_to_text = false.
+            context: speech
+            file: speech/Dockerfile
+            target: ""
+            build_args: ""
     steps:
-      - name: Skip the search image (web search turned off)
-        if: matrix.component == 'search' && vars.WEB_SEARCH == 'false'
+      - name: Skip an image that is turned off
+        if: (matrix.component == 'search' && vars.WEB_SEARCH == 'false') || (matrix.component == 'speech' && vars.SPEECH_TO_TEXT == 'false')
         run: |
-          echo "WEB_SEARCH is false, so the search image is not built."
+          echo "Turned off in the repository variables: not building ${{ matrix.component }}."
           echo "SKIP=true" >> "$GITHUB_ENV"
 
       - uses: actions/checkout@v7

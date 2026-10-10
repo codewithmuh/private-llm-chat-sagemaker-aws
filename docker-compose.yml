@@ -6,6 +6,7 @@
 #   mailpit   http://localhost:8025   every email the app sends (codes, resets)
 #   postgres                          the database
 #   searxng   http://localhost:8888   the web search behind the chat's "Search" button
+#   whisper                           speech to text, behind the microphone button
 #   ollama                            runs the AI model on the CPU (profile "ollama";
 #                                     on a GPU, Docker Model Runner runs it instead)
 #   mock-llm                          a fake model server, for testing the app
@@ -41,6 +42,7 @@ x-api-env: &api-env
   MEDIA_ROOT: /app/media
   AWS_REGION: ${AWS_REGION:-us-east-1}
   WEB_SEARCH_URL: http://searxng:8080
+  SPEECH_TO_TEXT_URL: http://whisper:9000
 
 services:
   postgres:
@@ -71,6 +73,16 @@ services:
       SEARXNG_SECRET: ${SEARXNG_SECRET:-local-dev-only-not-secret}
     ports: ["${SEARCH_PORT:-8888}:8080"]
 
+  # The microphone button: Whisper (whisper.cpp) turns speech into text, on the
+  # CPU, inside Docker, so the audio stays on your computer (speech/). The api
+  # calls it at http://whisper:9000. WHISPER_MODEL=small in .env = more
+  # accurate, slower (rebuild with make up).
+  whisper:
+    build:
+      context: ./speech
+      args:
+        WHISPER_MODEL: ${WHISPER_MODEL:-base}
+
   api:
     build:
       context: ./backend
@@ -89,6 +101,7 @@ services:
       postgres: {condition: service_healthy}
       mock-llm: {condition: service_started}
       searxng: {condition: service_started}
+      whisper: {condition: service_started}
       # Only with the "ollama" profile: the model is downloaded before the api starts.
       ollama-pull: {condition: service_completed_successfully, required: false}
 

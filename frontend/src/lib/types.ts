@@ -16,6 +16,8 @@ export interface AppConfig {
   accepted_file_types: string[];
   /** The server can search the web: show the "Search" button. */
   web_search: boolean;
+  /** The server can turn speech into text: show the microphone button. */
+  speech_to_text: boolean;
 }
 
 export interface MfaStatus {

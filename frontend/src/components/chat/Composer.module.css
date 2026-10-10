@@ -90,6 +90,50 @@
   box-shadow: var(--focus-ring);
 }
 
+/* The microphone: next to Send; red while it listens. */
+.mic {
+  margin-left: auto;
+}
+
+.mic + .send {
+  margin-left: 0;
+}
+
+.mic[data-state="recording"] {
+  background: var(--danger);
+  color: #fff;
+}
+
+.mic[data-state="recording"]:hover {
+  background: var(--danger-hover);
+}
+
+/* "● Listening 0:07 ×" while recording. */
+.recording {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  font-size: 13px;
+  color: var(--text-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.recordingDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--danger);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.3;
+  }
+}
+
 .hint {
   flex: 1;
   min-width: 0;

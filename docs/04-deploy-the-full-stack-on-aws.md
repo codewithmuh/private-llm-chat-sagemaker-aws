@@ -161,8 +161,9 @@ From the repository root:
 It:
 
 1. logs Docker in to your ECR registry,
-2. builds `backend/` (Dockerfile target `api`), `frontend/` and `search/` (the
-   SearXNG web search, unless `enable_web_search = false`) for `linux/arm64`,
+2. builds `backend/` (Dockerfile target `api`), `frontend/`, `search/` (the
+   SearXNG web search, unless `enable_web_search = false`) and `speech/` (Whisper
+   for the microphone, unless `enable_speech_to_text = false`) for `linux/arm64`,
    tagged with the git commit (e.g. `3f2a9c1b7d4e`),
 3. pushes the images,
 4. runs `terraform apply -var image_tag=<tag>` (Terraform owns the ECS task
@@ -176,8 +177,14 @@ from `LLM_MODELS` into the database (`RUN_BOOTSTRAP=true`). Allow a minute or tw
 The chat's **Search** button works on AWS too: SearXNG runs as a second
 container in each api task (`searxng`, logs in `/ecs/<name>/searxng`), and the
 api calls it on `localhost`. It is not reachable from outside the task. It uses
-about 200 MiB of the api task's memory (`api_memory`, 1 GiB by default). To
-keep every request inside AWS, set `enable_web_search = false`. Note that
+about 200 MiB of the api task's memory (`api_memory`, 2 GiB by default). To
+keep every request inside AWS, set `enable_web_search = false`.
+
+The **microphone** button works the same way: Whisper (`speech/`) is a third
+container in the api task (`whisper`, logs in `/ecs/<name>/whisper`), on the
+task's CPU, so voice never leaves your account. A few seconds of speech take a
+second or two to transcribe; raise `api_cpu` for faster transcription, or turn
+it off with `enable_speech_to_text = false`. Note that
 search engines are stricter with requests from cloud IP addresses: if some
 refuse (`CAPTCHA` or `too many requests` in the searxng logs), SearXNG
 uses the others.

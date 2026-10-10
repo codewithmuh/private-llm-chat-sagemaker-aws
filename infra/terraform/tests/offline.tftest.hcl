@@ -123,13 +123,18 @@ run "defaults" {
 
   # Web search is on by default: SearXNG runs in the api task, on localhost.
   assert {
+    condition     = local.django_environment["SPEECH_TO_TEXT_URL"] == "http://localhost:9000"
+    error_message = "SPEECH_TO_TEXT_URL should point at the whisper container in the api task."
+  }
+
+  assert {
     condition     = local.django_environment["WEB_SEARCH_URL"] == "http://localhost:8080"
     error_message = "WEB_SEARCH_URL should point at the searxng container in the api task."
   }
 
   assert {
     condition = (
-      [for c in jsondecode(module.ecs.api_container_definitions) : c.name] == ["api", "searxng"]
+      [for c in jsondecode(module.ecs.api_container_definitions) : c.name] == ["api", "searxng", "whisper"]
       && !jsondecode(module.ecs.api_container_definitions)[1].essential
       && jsondecode(module.ecs.api_container_definitions)[1].secrets[0].name == "SEARXNG_SECRET"
     )

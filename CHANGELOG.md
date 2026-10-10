@@ -33,6 +33,11 @@ All notable changes to this project are documented here. The format follows
   names the model, and without web search it tells the model to answer questions
   about the present once, with the year of its knowledge, instead of arguing with
   itself.
+- Voice input: a microphone button in the chat. The browser records and converts
+  to 16 kHz WAV; Whisper (`speech/`, whisper.cpp built from source, works on ARM)
+  transcribes it in a container next to the api, locally and on AWS
+  (`enable_speech_to_text`), so voice never leaves your infrastructure. The api
+  task's default memory is now 2 GiB (api + SearXNG + Whisper).
 - `RUN_LOCALLY.md`: a step-by-step guide for beginners, from installing Docker to chatting.
 
 ### Removed

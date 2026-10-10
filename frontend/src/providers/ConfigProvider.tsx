@@ -18,6 +18,7 @@ export const DEFAULT_CONFIG: AppConfig = {
   max_upload_mb: 20,
   accepted_file_types: [".pdf", ".docx", ".txt", ".md", ".csv", ".json", ".png", ".jpg", ".jpeg", ".webp", ".gif"],
   web_search: false,
+  speech_to_text: false,
 };
 
 interface ConfigValue {

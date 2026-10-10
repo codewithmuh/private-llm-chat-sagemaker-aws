@@ -56,6 +56,7 @@ deployment**, with every step explained:
 | **Documents & images** | Attach PDFs, Word files, text and code. Their text goes into the prompt, trimmed to fit the model's context window. Images go to vision models as pictures |
 | **OCR** | Extract text from photos, screenshots and scanned PDFs with a vision LLM, falling back to Tesseract on the CPU. Copy, download, or chat about the result |
 | **Web search** | A **Search** button, like ChatGPT's: the app looks the question up with a self-hosted [SearXNG](https://docs.searxng.org) (no API key), reads the top pages, and the model answers from them with numbered citations and a sources list. Up-to-date answers from a model with old training data |
+| **Voice input** | A **microphone** button, like ChatGPT's: speak, and the words appear in the message box to edit and send. Transcribed by [Whisper](https://github.com/ggml-org/whisper.cpp) in a container next to the app, so your voice never leaves your infrastructure |
 | **Accounts** | Email + password with email verification, password reset, **Sign in with Google**, **two-factor auth** with an authenticator app (TOTP) or email codes, recovery codes |
 | **Models** | SageMaker endpoints (AWS's vLLM container: nothing to build), OpenAI-compatible servers (vLLM, Ollama, LM Studio), a mock for development; several models on one GPU with the included router |
 | **GPU control** | Per model: `on_demand` (start when used, delete when idle), `always_on`, `off`, or `manual`. Status is shown live in the UI and the admin |
