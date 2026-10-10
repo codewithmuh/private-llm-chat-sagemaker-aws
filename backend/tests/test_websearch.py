@@ -232,3 +232,47 @@ def test_search_needs_a_configured_engine(auth_client: Client, mock_model: LLMMo
     res = auth_client.post_json(f"/api/conversations/{cid}/messages/", {"content": "News?", "web_search": True})
     assert res.status_code == 400
     assert "WEB_SEARCH_URL" in res.json()["error"]
+
+
+# ------------------------------------------- the system prompt and settings --
+
+
+def test_the_prompt_names_the_model_and_its_knowledge_limit(auth_client: Client, user, mock_model: LLMModel, settings):
+    from apps.chat.models import Conversation
+    from apps.chat.prompting import SEARCH_HINT, build_prompt
+
+    cid = new_conversation(auth_client)
+    parse_sse(auth_client.post_json(f"/api/conversations/{cid}/messages/", {"content": "Who is president?"}))
+    conversation = Conversation.objects.get(pk=cid)
+
+    settings.WEB_SEARCH_URL = ""
+    system = build_prompt(conversation, mock_model, user).messages[0]["content"]
+    assert "running the open-source model Mock" in system
+    assert "training data that ends well before today" in system
+    assert SEARCH_HINT not in system  # no Search button to suggest
+
+    settings.WEB_SEARCH_URL = SEARXNG
+    assert SEARCH_HINT in build_prompt(conversation, mock_model, user).messages[0]["content"]
+
+
+def test_chat_requests_carry_the_model_sampling_params(auth_client: Client, mock_model: LLMModel, monkeypatch):
+    from apps.chat import streaming
+    from apps.llm.providers import Usage
+
+    seen = []
+
+    class Recorder:
+        def stream(self, request):
+            seen.append(request)
+            yield "ok"
+            yield Usage(prompt_tokens=1, completion_tokens=1)
+
+        def complete(self, request):
+            raise streaming.ProviderError("no titles here")
+
+    mock_model.params = {"top_p": 0.8, "presence_penalty": 1.5}
+    mock_model.save()
+    monkeypatch.setattr(streaming, "provider_for", lambda model: Recorder())
+    cid = new_conversation(auth_client)
+    parse_sse(auth_client.post_json(f"/api/conversations/{cid}/messages/", {"content": "Hi"}))
+    assert seen[0].extra == {"top_p": 0.8, "presence_penalty": 1.5}

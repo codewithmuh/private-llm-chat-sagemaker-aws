@@ -58,6 +58,14 @@ class LLMModel(models.Model):
     context_window = models.PositiveIntegerField(default=8192)
     max_output_tokens = models.PositiveIntegerField(default=2048)
     temperature = models.FloatField(default=0.7)
+    # Extra sampling settings sent with every chat request, as the model's
+    # authors recommend them. presence_penalty is what keeps small models from
+    # going round in circles ("Wait, correction: ...").
+    params = models.JSONField(
+        default=dict,
+        blank=True,
+        help_text='Sent with every chat request, e.g. {"top_p": 0.8, "top_k": 20, "presence_penalty": 1.5}.',
+    )
 
     is_default = models.BooleanField(default=False)
     enabled = models.BooleanField(default=True)

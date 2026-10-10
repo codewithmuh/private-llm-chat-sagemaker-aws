@@ -35,14 +35,17 @@ CONTEXT=8192                    # tokens; = OLLAMA_CONTEXT_LENGTH in docker-comp
 CHOOSE=false
 [ "${1:-}" = "--choose" ] && CHOOSE=true
 
-# The menu. One model per line, with its name in each engine:
+# The menu. One model per line, with its name in each engine, and the sampling
+# settings its authors recommend (from each model card; presence_penalty keeps
+# small models from repeating themselves):
 #   Ollama name | Docker Model Runner name | name in the app | download GB | images? | good for
-CATALOG='qwen3-vl:4b-instruct|ai/qwen3-vl:4B-UD-Q4_K_XL|Qwen3-VL 4B|3.3|yes|chat, images and OCR
-gemma3:4b|ai/gemma3:4B-Q4_K_M|Gemma 3 4B|3.4|yes|chat and images, by Google
-qwen3:4b-instruct-2507-q4_K_M|ai/qwen3:4b-instruct-2507|Qwen3 4B|2.5|no|text only, quick and capable
-llama3.2:3b|ai/llama3.2:3B-Q4_K_M|Llama 3.2 3B|2.0|no|text only, the smallest and fastest
-qwen3:4b|ai/qwen3:4b-thinking-2507|Qwen3 4B Thinking|2.5|no|text only, reasons step by step first (slower)
-qwen3-vl:8b-instruct|ai/qwen3-vl:8B|Qwen3-VL 8B|6.2|yes|chat, images and OCR, smarter'
+#   | temperature | other settings (JSON)
+CATALOG='qwen3-vl:4b-instruct|ai/qwen3-vl:4B-UD-Q4_K_XL|Qwen3-VL 4B|3.3|yes|chat, images and OCR|0.7|{"top_p": 0.8, "top_k": 20, "presence_penalty": 1.5}
+gemma3:4b|ai/gemma3:4B-Q4_K_M|Gemma 3 4B|3.4|yes|chat and images, by Google|1.0|{"top_p": 0.95, "top_k": 64}
+qwen3:4b-instruct-2507-q4_K_M|ai/qwen3:4b-instruct-2507|Qwen3 4B|2.5|no|text only, quick and capable|0.7|{"top_p": 0.8, "top_k": 20, "presence_penalty": 1.0}
+llama3.2:3b|ai/llama3.2:3B-Q4_K_M|Llama 3.2 3B|2.0|no|text only, the smallest and fastest|0.6|{"top_p": 0.9}
+qwen3:4b|ai/qwen3:4b-thinking-2507|Qwen3 4B Thinking|2.5|no|text only, reasons step by step first (slower)|0.6|{"top_p": 0.95, "top_k": 20}
+qwen3-vl:8b-instruct|ai/qwen3-vl:8B|Qwen3-VL 8B|6.2|yes|chat, images and OCR, smarter|0.7|{"top_p": 0.8, "top_k": 20, "presence_penalty": 1.5}'
 
 die() {
   printf '\nError: %s\n' "$*" >&2
@@ -74,7 +77,7 @@ name_column() { # the catalog column with model names for this engine
   if [ "$ENGINE" = docker-model-runner ]; then echo 2; else echo 1; fi
 }
 
-catalog_field() { # catalog_field <model name, either engine> <column 3-6>
+catalog_field() { # catalog_field <model name, either engine> <column 3-8>
   printf '%s\n' "$CATALOG" | awk -F'|' -v t="$1" -v c="$2" '$1 == t || $2 == t { print $c }'
 }
 
@@ -228,7 +231,7 @@ choose_model() { # prints the chosen model name (or "mock"); the menu goes to st
     while IFS= read -r line; do
       n=$((n + 1))
       tag="$(printf '%s' "$line" | cut -d'|' -f"$col")"
-      IFS='|' read -r _ _ name size vision good <<EOF
+      IFS='|' read -r _ _ name size vision good _ <<EOF
 $line
 EOF
       note=""
@@ -284,10 +287,14 @@ EOF
 # ------------------------------------------------- config/models.local.json --
 
 model_json() { # model_json <model name> <base url> <default?> <sort>
-  local name vision good id where
+  local name vision good temperature params id where
   name="$(catalog_field "$1" 3)"
   vision="$(catalog_field "$1" 5)"
   good="$(catalog_field "$1" 6)"
+  temperature="$(catalog_field "$1" 7)"
+  params="$(catalog_field "$1" 8)"
+  [ -n "$temperature" ] || temperature=0.7 # a model you typed in yourself
+  [ -n "$params" ] || params='{}'
   id="$(printf '%s' "${1#ai/}" | tr 'A-Z' 'a-z' | tr -c 'a-z0-9-' '-' | tr -s '-' | sed 's/-$//')"
   [ "$vision" = yes ] && vision=true || vision=false
   case "$ENGINE" in
@@ -307,6 +314,8 @@ model_json() { # model_json <model name> <base url> <default?> <sort>
     "ocr": $vision,
     "context_window": $CONTEXT,
     "max_output_tokens": 2048,
+    "temperature": $temperature,
+    "params": $params,
     "default": $3,
     "sort": $4
   }

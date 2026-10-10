@@ -54,7 +54,10 @@ class LLMModelAdmin(admin.ModelAdmin):
                 )
             },
         ),
-        ("Capabilities", {"fields": ("vision", "ocr", "context_window", "max_output_tokens", "temperature")}),
+        (
+            "Capabilities",
+            {"fields": ("vision", "ocr", "context_window", "max_output_tokens", "temperature", "params")},
+        ),
         (
             "GPU state (written by the controller)",
             {

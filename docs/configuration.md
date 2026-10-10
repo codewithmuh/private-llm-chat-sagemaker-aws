@@ -111,6 +111,10 @@ Because the browser sees a single origin, cookies and CSRF need no cross-origin 
     "context_window": 32768,
     "max_output_tokens": 4096,
     "temperature": 0.7,
+    // Extra sampling settings sent with every chat request (not OCR), as the
+    // model card recommends. presence_penalty stops small models from repeating
+    // themselves. top_k is not OpenAI's, but vLLM, llama.cpp and Ollama accept it.
+    "params": {"top_p": 0.8, "top_k": 20, "presence_penalty": 1.5},
     "default": true,
     "sort": 10,
     "enabled": true

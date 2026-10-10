@@ -88,6 +88,7 @@ def test_sync_models_create_update_disable():
         {"id": "x", "provider": "openai"},  # no base_url
         {"id": "x", "provider": "sagemaker"},  # no endpoint_name
         {"id": "x", "provider": "sagemaker", "endpoint_name": "e", "scaling": "sometimes"},
+        {"id": "x", "provider": "openai", "base_url": "http://x/v1", "params": [0.8]},  # not an object
     ],
 )
 def test_parse_models_config_rejects_bad_entries(bad):
@@ -102,3 +103,13 @@ def test_sync_models_from_file(tmp_path, settings):
     settings.LLM_MODELS = ""
     settings.LLM_MODELS_FILE = str(path)
     assert sync_models()["created"] == ["llama"]
+
+
+@pytest.mark.django_db
+def test_sync_models_keeps_sampling_params():
+    params = {"top_p": 0.8, "top_k": 20, "presence_penalty": 1.5}
+    sync_models(json.dumps([{**CONFIG[1], "temperature": 0.7, "params": params}]))
+    assert LLMModel.objects.get(slug="llama").params == params
+    # Removed from the config: back to none, not left over from before.
+    sync_models(json.dumps([CONFIG[1]]))
+    assert LLMModel.objects.get(slug="llama").params == {}

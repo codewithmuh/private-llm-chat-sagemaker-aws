@@ -137,6 +137,8 @@ service only listens on `127.0.0.1`, which containers can't reach: run
   "ocr": true,
   "context_window": 8192,
   "max_output_tokens": 2048,
+  "temperature": 0.7,
+  "params": {"top_p": 0.8, "top_k": 20, "presence_penalty": 1.5},
   "default": true
 }
 ```
@@ -151,6 +153,9 @@ service only listens on `127.0.0.1`, which containers can't reach: run
 - `model_id`: the name Ollama knows the model by.
 - `vision: true`: images are sent to the model as pictures. Without it, the app OCRs
   images first and sends the text.
+- `temperature`, `params`: the sampling settings the model's authors recommend, sent
+  with every chat request. Small models need them: without `presence_penalty`,
+  Qwen3-VL can go round in circles ("Wait, correction: ...").
 - `context_window`: how much the model can read at once. The backend trims long
   conversations to fit (`apps/chat/prompting.py`). The script sets the engine to the
   same 8192 tokens (`docker model configure --context-size`, or

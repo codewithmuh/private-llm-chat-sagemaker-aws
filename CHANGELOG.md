@@ -28,6 +28,11 @@ All notable changes to this project are documented here. The format follows
   SearXNG (`search/`, self-hosted, no API key; a compose service locally and a sidecar
   container in the api task on AWS, `enable_web_search`), reads the top pages, and
   the model answers from them with numbered citations and a sources list.
+- Models can carry their recommended sampling settings (`params` in `LLM_MODELS`,
+  editable in the admin); `make up` sets them for every menu model. The system prompt
+  names the model, and without web search it tells the model to answer questions
+  about the present once, with the year of its knowledge, instead of arguing with
+  itself.
 - `RUN_LOCALLY.md`: a step-by-step guide for beginners, from installing Docker to chatting.
 
 ### Removed

@@ -171,7 +171,14 @@ def stream_answer(
 
         producer = _ProducerThread(
             provider_for(model),
-            ChatRequest(messages=prompt.messages, max_tokens=prompt.max_tokens, temperature=model.temperature),
+            ChatRequest(
+                messages=prompt.messages,
+                max_tokens=prompt.max_tokens,
+                temperature=model.temperature,
+                # The model's recommended sampling settings (not for OCR,
+                # where a repetition penalty would change the transcription).
+                extra=dict(model.params),
+            ),
         )
         producer.start()
         last_save = time.monotonic()

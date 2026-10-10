@@ -121,6 +121,7 @@ _FIELDS = {
     "context_window": ("context_window", 8192),
     "max_output_tokens": ("max_output_tokens", 2048),
     "temperature": ("temperature", 0.7),
+    "params": ("params", {}),
     "default": ("is_default", False),
     "sort": ("sort", 100),
     "enabled": ("enabled", True),
@@ -159,6 +160,8 @@ def parse_models_config(raw: str | list) -> list[dict]:
             raise ValueError(f"LLM_MODELS[{slug}]: an 'openai' provider needs 'base_url'")
         if provider == "sagemaker" and not entry.get("endpoint_name"):
             raise ValueError(f"LLM_MODELS[{slug}]: a 'sagemaker' provider needs 'endpoint_name'")
+        if not isinstance(entry.get("params", {}), dict):
+            raise ValueError(f'LLM_MODELS[{slug}]: params must be a JSON object, e.g. {{"top_p": 0.8}}')
         if entry.get("scaling", "manual") not in LLMModel.Scaling.values:
             raise ValueError(f"LLM_MODELS[{slug}]: scaling must be one of {LLMModel.Scaling.values}")
         cleaned.append(entry)
@@ -181,7 +184,7 @@ def sync_models(raw: str | list | None = None) -> dict[str, list[str]]:
             if key in entry:
                 defaults[field] = entry[key]
             elif default is not None:
-                defaults[field] = default
+                defaults[field] = dict(default) if isinstance(default, dict) else default
         defaults.setdefault("name", entry["id"])
         _, created = LLMModel.objects.update_or_create(slug=entry["id"], defaults=defaults)
         result["created" if created else "updated"].append(entry["id"])
