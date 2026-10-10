@@ -43,7 +43,7 @@ app it's just another `provider: "openai"` model with a different `base_url`.
 | 3 | Qwen3 4B | `ai/qwen3:4b-instruct-2507` | `qwen3:4b-instruct-2507-q4_K_M` | 2.5 GB | | Text only, quick and capable |
 | 4 | Llama 3.2 3B | `ai/llama3.2:3B-Q4_K_M` | `llama3.2:3b` | 2.0 GB | | Text only, the smallest and fastest |
 | 5 | Qwen3 4B Thinking | `ai/qwen3:4b-thinking-2507` | `qwen3:4b` | 2.5 GB | | Reasons step by step first: slower, better at maths and logic. The app shows the reasoning in a collapsible block |
-| 6 | Qwen3-VL 8B | `ai/qwen3-vl:8B` | `qwen3-vl:8b-instruct` | 6.2 GB | ✅ | Smarter, fewer mistakes. **Recommended on a GPU with 16 GB** |
+| 6 | Qwen3-VL 8B | `ai/qwen3-vl:8B` | `qwen3-vl:8b-instruct` | 6.2 GB | ✅ | Smarter, fewer mistakes. **Recommended on a GPU** when about 10 GB are free next to Docker (a 24 GB Mac, or Docker's memory lowered) |
 | 7 | Any other model | [hub.docker.com/u/ai](https://hub.docker.com/u/ai) | [ollama.com/library](https://ollama.com/library) | | | You type its name |
 | 8 | No AI: the mock model | | | none | | Testing the app itself: it answers by describing what the backend sent it |
 
@@ -85,12 +85,22 @@ make model
 
 Answer **yes** when it asks about Docker Model Runner (or turn it on yourself in
 Docker Desktop → **Settings → AI**). It downloads the model once more, into Model
-Runner. What you can expect on an Apple M1 Pro:
+Runner. On an Apple M1 Pro, Qwen3-VL 4B in Ollama on the CPU writes about 8 tokens a
+second and needs about 90 seconds to read a receipt photo; on the GPU, a small vision
+model read the same photo in 2 seconds.
 
-| | Ollama in Docker (CPU) | Docker Model Runner (GPU) |
-|---|---|---|
-| Qwen3-VL 4B, writing | ~8 tokens/s | see guide note below |
-| Reading a receipt photo | ~90 s | a few seconds |
+### Memory: the model lives next to Docker
+
+With Model Runner the model doesn't run inside Docker's virtual machine: it shares
+your computer's memory with it. Docker Desktop keeps the memory it was given
+(**Settings → Resources → Memory**, often half your RAM), so the menu only counts what
+is left, and marks the models that don't fit. Pick one anyway and macOS swaps the model
+to disk: it gets *slower* than the CPU (Qwen3-VL 8B on a 16 GB Mac with Docker at 8 GB:
+about 5 tokens/s).
+
+With Model Runner, the app's own containers need only 1–2 GB (a bit more while images
+build). So to make room for a bigger model, lower Docker's memory to 4 GB, then run
+`make model` again.
 
 To go back to the CPU engine, turn Model Runner off in Docker Desktop and run
 `make model`.

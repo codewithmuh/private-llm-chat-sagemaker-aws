@@ -160,20 +160,20 @@ normal Docker container: it works, just slower.)
 Which AI model should the app use?
 It runs on your computer, so your chats stay private. It downloads once.
 
-  1) Qwen3-VL 4B         3.3 GB   chat, images and OCR
+  1) Qwen3-VL 4B         3.3 GB   chat, images and OCR (recommended)
   2) Gemma 3 4B          3.4 GB   chat and images, by Google
   3) Qwen3 4B            2.5 GB   text only, quick and capable
   4) Llama 3.2 3B        2.0 GB   text only, the smallest and fastest
   5) Qwen3 4B Thinking   2.5 GB   text only, reasons step by step first (slower)
-  6) Qwen3-VL 8B         6.2 GB   chat, images and OCR, smarter (recommended)
+  6) Qwen3-VL 8B         6.2 GB   chat, images and OCR, smarter
   7) Another model from https://hub.docker.com/u/ai (or hf.co/...) (you type its name)
   8) No AI: the mock model, for testing the app (no download)
 
-Your choice [6]:
+Your choice [1]:
 ```
 
 **Not sure? Just press Enter** to get the model marked "(recommended)": the best one
-your computer can run well. It can chat, read pictures and pull text out of images.
+your computer can run well (the bigger 8B needs about 10 GB of free memory). It can chat, read pictures and pull text out of images.
 If a line says "needs more memory", pick a smaller model. You can change your mind
 later (see [Change the AI model](#change-the-ai-model)).
 
@@ -189,7 +189,7 @@ What happens next:
   ```
     Ready! Open http://localhost:3000 and sign up.
     Emails (your sign-up code):  http://localhost:8025
-    AI model:  Qwen3-VL 8B (ai/qwen3-vl:8B), in Docker Model Runner (GPU).
+    AI model:  Qwen3-VL 4B (ai/qwen3-vl:4B-UD-Q4_K_XL), in Docker Model Runner (GPU).
   ```
 
 - Starting the app again later takes seconds, and doesn't ask again: everything is
@@ -321,6 +321,7 @@ The admin panel lists users and conversations, and lets you add AI models.
 | `the app cannot get an answer from the model`, or the chat shows an error about memory | The model is too big for the memory Docker has. Choose a smaller one ([Change the AI model](#change-the-ai-model)), or give Docker more memory: Docker Desktop → Settings → Resources → Memory |
 | "Web search failed" under an answer | The search engines refused for a moment (they limit automated searches). Try again in a minute; `docker compose logs searxng` shows which engines answered |
 | Answers are very slow | The model runs on your processor (`AI model: ... CPU only` when it starts). On a Mac with an M chip or a PC with an NVIDIA card, run the "Change the AI model" command and answer yes to Docker Model Runner. Otherwise, choose a smaller model |
+| Slow even with Docker Model Runner, and the whole computer feels sluggish | The model is too big for the memory left next to Docker. Run the "Change the AI model" command and pick the "(recommended)" one, or see [guide 2](docs/02-run-a-real-model-locally.md#memory-the-model-lives-next-to-docker) |
 | `Docker Model Runner is switched off` | It was turned off in Docker Desktop. Turn it back on in Docker Desktop → Settings → AI, or run the "Change the AI model" command to choose again |
 | Windows: the `api` keeps restarting, and `docker compose logs api` shows `exec /app/docker-entrypoint.sh: no such file or directory` | Git changed the line endings. Delete the project folder, clone it again with `--config core.autocrlf=false` ([step 2](#step-2-download-the-code)), then do step 3 again |
 | The page says **"Not found. Try again"** or **"Can't reach the server"** | The app isn't running, or is still starting. Run the start command, wait for **Ready!**, then refresh |

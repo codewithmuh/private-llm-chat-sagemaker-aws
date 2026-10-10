@@ -91,16 +91,24 @@ model_label() { # "Qwen3-VL 4B (qwen3-vl:4b-instruct)", or just the name
   if [ -n "$name" ]; then printf '%s (%s)' "$name" "$1"; else printf '%s' "$1"; fi
 }
 
-memory_gb() { # memory the model can use: Docker's limit, or the computer's RAM
-  local bytes=""
+memory_gb() { # memory the model can use, in GB
+  local bytes="" docker_vm=0
   if [ "$ENGINE" = ollama ]; then
+    # In a container: Docker Desktop's limit (Settings > Resources > Memory).
     bytes="$(docker info --format '{{.MemTotal}}' 2>/dev/null || true)"
-  elif [ "$(uname)" = Darwin ]; then
-    bytes="$(sysctl -n hw.memsize 2>/dev/null || true)"
-  elif [ -r /proc/meminfo ]; then
-    bytes="$(awk '/^MemTotal:/ { print $2 * 1024 }' /proc/meminfo)"
+  else
+    # Next to Docker: the computer's RAM, minus what Docker Desktop's virtual
+    # machine keeps for itself (on Linux, Docker runs without one).
+    if [ "$(uname)" = Darwin ]; then
+      bytes="$(sysctl -n hw.memsize 2>/dev/null || true)"
+    elif [ -r /proc/meminfo ]; then
+      bytes="$(awk '/^MemTotal:/ { print $2 * 1024 }' /proc/meminfo)"
+    fi
+    case "$(docker info --format '{{.OperatingSystem}}' 2>/dev/null)" in
+      *"Docker Desktop"*) docker_vm="$(docker info --format '{{.MemTotal}}' 2>/dev/null || echo 0)" ;;
+    esac
   fi
-  [ -n "$bytes" ] && awk -v b="$bytes" 'BEGIN { printf "%.1f", b / 1073741824 }'
+  [ -n "$bytes" ] && awk -v b="$bytes" -v d="$docker_vm" 'BEGIN { printf "%.1f", (b - d) / 1073741824 }'
 }
 
 fits() { # fits <download GB> <memory GB>: the model, its working memory and the app
@@ -132,7 +140,8 @@ docker_ollama_running() { # our Ollama container, whatever the profile says
 }
 
 model_runner_on() {
-  docker model status 2>/dev/null | grep -q "is running"
+  # Not `| grep -q`: with pipefail, grep quitting early can fail the pipe.
+  case "$(docker model status 2>/dev/null)" in *"is running"*) return 0 ;; *) return 1 ;; esac
 }
 
 model_runner_worth_it() { # Docker Desktop, and a GPU it can use
