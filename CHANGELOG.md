@@ -42,6 +42,13 @@ All notable changes to this project are documented here. The format follows
   model sizes, GPU memory and quantization to RAG, tool calling, Whisper, SageMaker
   and the app's architecture, with a pitch, design trade-offs and common questions.
 - `RUN_LOCALLY.md`: a step-by-step guide for beginners, from installing Docker to chatting.
+- `make status`: the running containers, and the AI model by name, including one
+  that Docker Model Runner runs outside the containers.
+
+### Changed
+- The `mock-llm` container (fake answers) starts only when you choose "No AI" (the
+  `mock` compose profile) or use `make up-aws`. With a real model, `make up` no longer
+  starts it, so `docker ps` doesn't suggest the app is using it.
 
 ### Removed
 - `make ollama` and `config/models.ollama.json`: replaced by `make up` / `make model`.

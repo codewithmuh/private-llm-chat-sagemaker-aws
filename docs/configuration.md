@@ -11,7 +11,7 @@ Terraform). This page lists every variable each container reads.
 | **api** | `backend/Dockerfile` (target `api`) | 8000 | gunicorn (default `CMD`) | `GET /api/health/` |
 | **gpu-controller** | same image as api | — | `python manage.py gpu_controller` | — (a loop; restarts on exit) |
 | **web** | `frontend/Dockerfile` | 3000 | `node server.js` (Next.js standalone) | `GET /healthz` |
-| **mock-llm** (dev only) | `ml/mock/Dockerfile` | 8080 | uvicorn | `GET /health` |
+| **mock-llm** (dev only, profile `mock`) | `ml/mock/Dockerfile` | 8080 | uvicorn | `GET /health` |
 
 In production, one domain serves everything (CloudFront → ALB):
 

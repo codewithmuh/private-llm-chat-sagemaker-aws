@@ -206,10 +206,10 @@ the model you chose. You don't need to change it now.
 docker compose ps
 ```
 
-You should see `api`, `mailpit`, `mock-llm`, `postgres`, `searxng`, `web` and `whisper`, all
-with a STATUS starting with `Up`, plus `ollama` if the AI runs in a container. (With
-Docker Model Runner the AI isn't in this list: Docker Desktop runs it. Check it with
-`docker model ps`.)
+You should see `api`, `mailpit`, `postgres`, `searxng`, `web` and `whisper`, all with a
+STATUS starting with `Up`, plus `ollama` if the AI runs in a container, or `mock-llm` (the
+fake model) if you chose "No AI". (With Docker Model Runner the AI isn't in this list:
+Docker Desktop runs it. `make status` shows it by name, or check it with `docker model ps`.)
 
 Then open this address in your web browser:
 

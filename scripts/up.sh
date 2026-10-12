@@ -21,7 +21,8 @@
 #                        running. Optional: nothing here installs it.
 #
 # The choices are kept in .env: MODEL_ENGINE, LOCAL_MODEL, LLM_MODELS_FILE and
-# COMPOSE_PROFILES ("ollama" makes `docker compose up` start Ollama too).
+# COMPOSE_PROFILES ("ollama" makes `docker compose up` start Ollama too, "mock"
+# the fake model's container; with a real model the fake one isn't started).
 #
 # Works with the bash 3.2 that ships with macOS, and in Git Bash on Windows.
 set -euo pipefail
@@ -140,6 +141,11 @@ ollama_up() {
 docker_ollama_running() { # our Ollama container, whatever the profile says
   [ -n "$(docker ps -q --filter label=com.docker.compose.project=llmchat \
     --filter label=com.docker.compose.service=ollama)" ]
+}
+
+docker_mock_exists() { # the fake model's container, running or stopped
+  [ -n "$(docker ps -aq --filter label=com.docker.compose.project=llmchat \
+    --filter label=com.docker.compose.service=mock-llm)" ]
 }
 
 model_runner_on() {
@@ -440,10 +446,13 @@ if [ "$ENGINE" != ollama ] || [ "$LOCAL_MODEL" = mock ]; then
 fi
 
 if [ "$LOCAL_MODEL" = mock ]; then
+  env_set COMPOSE_PROFILES mock
   env_set LLM_MODELS_FILE models.mock.json
   start_app
   MODEL_LINE="the mock model (no AI). Choose a real one with: make model"
 else
+  # A real model: remove the fake one's container, left from a "No AI" run.
+  if docker_mock_exists; then docker compose --profile mock rm -sf mock-llm >/dev/null 2>&1; fi
   case "$ENGINE" in
     docker-model-runner)
       BASE_URL="http://model-runner.docker.internal/engines/v1"

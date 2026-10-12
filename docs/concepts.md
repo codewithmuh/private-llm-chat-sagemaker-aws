@@ -753,12 +753,12 @@ make up  →  scripts/up.sh  →  docker compose up -d --build
 | `searxng` | web search: http://localhost:8888 |
 | `whisper` | speech to text |
 | `ollama` | the model on the CPU (only with `MODEL_ENGINE=ollama`) |
-| `mock-llm` | a fake model, for testing the app itself |
+| `mock-llm` | a fake model, for testing the app itself (only with "No AI") |
 
 Docker ideas you meet here: an **image** (a packaged program) and a **container** (a
 running copy); **Compose** starts many together from `docker-compose.yml`;
 **volumes** keep data across restarts; **profiles** turn services on or off
-(`COMPOSE_PROFILES=ollama`); **health checks** say when a service is ready;
+(`COMPOSE_PROFILES=ollama` or `mock`); **health checks** say when a service is ready;
 **multi-stage builds** compile in one image and ship a small one (`speech/Dockerfile`).
 
 `scripts/up.sh` the first time: picks the **engine** (Docker Model Runner on a GPU, else

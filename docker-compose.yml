@@ -10,9 +10,11 @@
 #   ollama                            runs the AI model on the CPU (profile "ollama";
 #                                     on a GPU, Docker Model Runner runs it instead)
 #   mock-llm                          a fake model server, for testing the app
+#                                     (profile "mock": when you choose "No AI",
+#                                     and in `make up-aws`)
 #
-# COMPOSE_PROFILES=ollama in .env (set by `make up`) makes plain
-# `docker compose up -d --build` start Ollama too.
+# COMPOSE_PROFILES in .env (set by `make up`: "ollama", "mock" or empty) makes
+# plain `docker compose up -d --build` start Ollama or the fake model too.
 #   -f docker-compose.aws.yml   use a model deployed on SageMaker (see docs/03-*)
 #
 # Ports can be changed in .env (WEB_PORT, API_PORT, MAILPIT_PORT, SEARCH_PORT, OLLAMA_PORT).
@@ -62,8 +64,11 @@ services:
     image: axllent/mailpit:latest
     ports: ["${MAILPIT_PORT:-8025}:8025"]
 
+  # Fake answers, no AI (profile "mock"). With a real model it isn't started,
+  # so `docker ps` doesn't suggest the app is using it.
   mock-llm:
     build: ./ml/mock
+    profiles: ["mock"]
 
   # The chat's "Search" button: SearXNG with our settings (search/). The api
   # calls it at http://searxng:8080; open http://localhost:8888 to try it.
@@ -99,7 +104,8 @@ services:
     extra_hosts: ["host.docker.internal:host-gateway"]
     depends_on:
       postgres: {condition: service_healthy}
-      mock-llm: {condition: service_started}
+      # Only with the "mock" profile.
+      mock-llm: {condition: service_started, required: false}
       searxng: {condition: service_started}
       whisper: {condition: service_started}
       # Only with the "ollama" profile: the model is downloaded before the api starts.

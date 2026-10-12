@@ -45,7 +45,8 @@ infra/terraform/**/terraform.tfvars
 .terraform.tfstate.lock.info
 
 # --- models & data ---------------------------------------------------------
-models/
+# Downloaded weights at the repository root (not ml/models/, the preset catalog).
+/models/
 *.safetensors
 *.gguf
 

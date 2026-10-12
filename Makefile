@@ -4,6 +4,8 @@ SHELL := /bin/bash
 
 COMPOSE     := docker compose
 COMPOSE_AWS := docker compose -f docker-compose.yml -f docker-compose.aws.yml
+# down and reset stop the optional containers too, whichever profile started them.
+ALL_PROFILES := --profile ollama --profile mock
 PY          := backend/.venv/bin/python
 TF          := terraform -chdir=infra/terraform
 
@@ -26,15 +28,20 @@ model: ## Choose another AI model (MODEL=llama3.2:3b skips the menu, MODEL=mock 
 
 .PHONY: up-aws
 up-aws: .env ## Local app + models on SageMaker (uses ~/.aws and AWS_PROFILE)
-	$(COMPOSE_AWS) up -d --build
+	@# The example models.sagemaker.json offers the mock model too.
+	$(COMPOSE_AWS) --profile mock up -d --build
+
+.PHONY: status
+status: ## What is running: the containers, and the AI model by name
+	@./scripts/status.sh
 
 .PHONY: down
 down: ## Stop the local stack (keeps data)
-	$(COMPOSE) --profile ollama down
+	$(COMPOSE) $(ALL_PROFILES) down
 
 .PHONY: reset
 reset: ## Stop and DELETE local data (database, uploads, Ollama models)
-	$(COMPOSE) --profile ollama down -v
+	$(COMPOSE) $(ALL_PROFILES) down -v
 
 .PHONY: logs
 logs: ## Follow logs of the api and web containers

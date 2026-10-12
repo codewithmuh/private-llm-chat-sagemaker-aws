@@ -186,7 +186,7 @@ Cost breakdown: [docs/cost.md](docs/cost.md).
 ├── scripts/            deploy, GPU start/stop, state bucket, weight staging
 ├── config/             model lists for local development
 ├── docs/               guides (01–05) and reference
-├── docker-compose.yml  local stack: web, api, postgres, mailpit, mock-llm (+ ollama)
+├── docker-compose.yml  local stack: web, api, postgres, mailpit (+ ollama or mock-llm)
 └── Makefile            `make help` lists everything
 ```
 
