@@ -9,11 +9,16 @@ vLLM, and put a real ChatGPT-style app in front of them: accounts with Google si
 and two-factor auth, streaming chat, documents and images, OCR, and a GPU that switches
 itself off when nobody is using it.
 
+[![Release](https://img.shields.io/github/v/release/codewithmuh/private-llm-chat-sagemaker-aws?style=flat-square&color=blue)](https://github.com/codewithmuh/private-llm-chat-sagemaker-aws/releases)
+[![Stars](https://img.shields.io/github/stars/codewithmuh/private-llm-chat-sagemaker-aws?style=flat-square&color=gold)](https://github.com/codewithmuh/private-llm-chat-sagemaker-aws/stargazers)
+[![Forks](https://img.shields.io/github/forks/codewithmuh/private-llm-chat-sagemaker-aws?style=flat-square&color=blueviolet)](https://github.com/codewithmuh/private-llm-chat-sagemaker-aws/network/members)
 [![CI](https://github.com/codewithmuh/private-llm-chat-sagemaker-aws/actions/workflows/ci.yml/badge.svg)](https://github.com/codewithmuh/private-llm-chat-sagemaker-aws/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 ![Python](https://img.shields.io/badge/python-3.12-blue)
 ![Next.js](https://img.shields.io/badge/next.js-16-black)
 ![Terraform](https://img.shields.io/badge/terraform-%E2%89%A51.9-7B42BC)
+[![YouTube](https://img.shields.io/badge/YouTube-codewithmuh-red?style=flat-square&logo=youtube)](https://youtube.com/@codewithmuh)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Muhammad%20Rashid-blue?style=flat-square&logo=linkedin)](https://www.linkedin.com/in/muhammadrashid-daha/)
 
 [Quick start](#quick-start-no-gpu) ·
 [Learning path](#choose-your-path) ·
