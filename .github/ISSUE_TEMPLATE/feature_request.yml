@@ -1,20 +1,36 @@
-name: Feature request
-description: Suggest an idea or a new model / deployment option
-labels: [enhancement]
+name: 💡 Feature Request
+description: Suggest an idea or enhancement for this architecture
+labels: ["enhancement"]
 body:
-  - type: textarea
-    id: problem
+  - type: markdown
     attributes:
-      label: What problem would this solve?
+      value: |
+        Thank you for suggesting an improvement to the Three-Tier DevSecOps Project!
+  - type: input
+    id: title
+    attributes:
+      label: Proposal Title
+      description: A short, descriptive title for the feature
     validations:
       required: true
   - type: textarea
-    id: idea
+    id: problem
     attributes:
-      label: What would you like to happen?
-  - type: checkboxes
-    id: help
+      label: Problem Statement
+      description: Is your feature request related to a specific problem or limitation?
+    validations:
+      required: true
+  - type: textarea
+    id: solution
     attributes:
-      label: Contributing
-      options:
-        - label: I'd like to work on this myself
+      label: Proposed Architecture / Solution
+      description: Describe the solution you'd like to see implemented
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Any alternative solutions or architectures you considered?
+    validations:
+      required: false

@@ -1,31 +1,39 @@
-# Security policy
+# Security Policy
 
-## Reporting a vulnerability
+## Supported Versions
 
-Please **do not open a public issue** for security problems.
+We provide security updates and patches for the current major release track:
 
-Use GitHub's private reporting instead: **Security → Report a vulnerability** on this
-repository. Include what you found, how to reproduce it, and what an attacker could do
-with it. You'll get an answer within a week.
+| Version | Supported          |
+| ------- | ------------------ |
+| 1.0.x   | :white_check_mark: |
+| < 1.0   | :x:                |
 
-## Scope
+---
 
-In scope: the application code in this repository (backend, frontend, model
-containers) and the Terraform, when used as documented.
+## Reporting a Vulnerability
 
-Out of scope: vulnerabilities in the models themselves (prompt injection, jailbreaks,
-hallucinations), in upstream projects (vLLM, Django, Next.js; report those upstream),
-and misconfigurations that the docs warn against.
+We take the security of this architecture and its deployment scripts seriously. If you discover a security vulnerability or credential exposure risk:
 
-## Things this project does on purpose
+1. **Do NOT open a public GitHub issue.**
+2. Report the vulnerability privately via **[GitHub Private Security Advisories](https://github.com/codewithmuh/three-tier-devsecops-project/security/advisories/new)** (preferred).
+3. Alternatively, email the maintainer directly at **[contact@codewithmuh.com](mailto:contact@codewithmuh.com)** with the subject line `[SECURITY] Three-Tier DevSecOps Project`.
 
-- Sessions are `HttpOnly` cookies with CSRF protection; no tokens in `localStorage`.
-- Passwords are hashed by Django (PBKDF2); one-time codes and recovery codes are stored
-  as keyed hashes; each emailed code allows 5 attempts and expires after 15 minutes.
-- Two-factor authentication (authenticator app or email) also applies to the Django
-  admin: `/admin/login/` sends you through the app's login.
-- The SageMaker endpoint is reachable only through the AWS API with IAM credentials;
-  SageMaker Data Capture (which would copy every prompt to S3) is never enabled.
-- Uploaded files are private (S3 bucket with public access blocked, presigned links
-  that expire in 5 minutes); only images and PDFs are ever shown inline.
-- Prompts and answers are never written to logs.
+### What to Include in Your Report:
+* Description of the vulnerability or risk (e.g., IAM over-privileging, pipeline injection, insecure container defaults).
+* Steps to reproduce the vulnerability or proof-of-concept configuration.
+* Potential impact and mitigation recommendations.
+
+### Response Timeline:
+* **Initial Acknowledgment**: Within 48 hours.
+* **Assessment & Status Update**: Within 5 business days.
+* **Patch & Public Disclosure**: Coordinated release following remediation.
+
+---
+
+## Zero-Secret Policy
+
+This repository strictly enforces a zero-credentials policy:
+* Automated pre-commit and PR scanning is enforced via **Gitleaks**.
+* Environment templates must only use `.env.example` placeholders.
+* Sensitive infrastructure state files (`*.tfstate`) and keys (`*.pem`, `*.key`) are blocked by `.gitignore`.
